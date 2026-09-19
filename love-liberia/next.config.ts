@@ -1,9 +1,13 @@
 import type { NextConfig } from "next";
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
+
+const projectRoot = dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["10.155.76.119", "10.151.7.119", "10.232.238.119", "localhost", "127.0.0.1"],
   turbopack: {
-    root: __dirname,
+    root: projectRoot,
   },
   compress: true,
   images: {

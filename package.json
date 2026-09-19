@@ -2,6 +2,7 @@
   "name": "liberia-dating-site",
   "private": true,
   "scripts": {
+    "postinstall": "npm --prefix love-liberia install",
     "dev": "npm --prefix love-liberia run dev",
     "build": "npm --prefix love-liberia run build",
     "start": "npm --prefix love-liberia run start -- -p 3001",
