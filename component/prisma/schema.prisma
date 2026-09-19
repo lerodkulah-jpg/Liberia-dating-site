@@ -1,0 +1,743 @@
+generator client {
+	provider = "prisma-client-js"
+	output   = "../../love-liberia/node_modules/.prisma/client"
+}
+
+datasource db {
+	provider = "sqlite"
+	url      = env("DATABASE_URL")
+}
+
+model User {
+	id        String   @id @default(cuid())
+	firstName String
+	username  String   @unique
+	email     String   @unique
+	phone     String?
+	password  String
+
+	dateOfBirth DateTime
+	gender      String
+
+	country String  @default("Liberia")
+	county  String?
+	city    String?
+
+	bio              String?
+	relationshipGoal String?
+	occupation       String?
+	education        String?
+	height           String?
+	languages        String?
+	interests        String?
+	hobbies          String?
+	religion         String?
+	smokingPreference String?
+	drinkingPreference String?
+	childrenPreference String?
+	profileImage     String?
+
+	verified  Boolean @default(false)
+	emailVerified Boolean @default(false)
+	phoneVerified Boolean @default(false)
+	photoVerified Boolean @default(false)
+	photoVerificationStatus String @default("NOT_SUBMITTED")
+	identityVerificationStatus String @default("NOT_SUBMITTED")
+	membershipPlan String @default("FREE")
+	membershipStatus String @default("ACTIVE")
+	isOnline  Boolean @default(false)
+	isActive  Boolean @default(true)
+	isBanned Boolean @default(false)
+	role      String  @default("USER")
+	hideOnlineStatus Boolean @default(false)
+	hideLastActive Boolean @default(false)
+	messagePermission String @default("EVERYONE")
+	incognitoMode Boolean @default(false)
+	profileViewTracking Boolean @default(true)
+	failedLoginCount Int @default(0)
+	lockedUntil DateTime?
+	lastLoginAt DateTime?
+	lastLoginIp String?
+	deletedAt DateTime?
+	twoFactorEnabled Boolean @default(false)
+	twoFactorSecret String?
+
+	createdAt DateTime @default(now())
+	updatedAt DateTime @updatedAt
+
+	preferences DatingPreference?
+	profilePhotos ProfilePhoto[]
+
+	sentLikes     Like[] @relation("SentLikes")
+	receivedLikes Like[] @relation("ReceivedLikes")
+
+	sentMessages     Message[] @relation("SentMessages")
+	receivedMessages Message[] @relation("ReceivedMessages")
+
+	blocksMade     Block[]  @relation("BlocksMade")
+	blocksReceived Block[]  @relation("BlocksReceived")
+	hiddenProfiles HiddenProfile[] @relation("HiddenProfilesMade")
+	hiddenBy       HiddenProfile[] @relation("HiddenProfilesReceived")
+	reportsMade    Report[] @relation("ReportsMade")
+	reportsReceived Report[] @relation("ReportsReceived")
+	riskFlags      UserRiskFlag[] @relation("RiskFlaggedUsers")
+	profile         Profile?
+	photos          Photo[] @relation("UserPhotos")
+	userInterests   UserInterest[]
+	preference      Preference?
+	superLikesSent  SuperLike[] @relation("SentSuperLikes")
+	superLikesReceived SuperLike[] @relation("ReceivedSuperLikes")
+	passesMade      Pass[] @relation("PassesMade")
+	passesReceived  Pass[] @relation("PassesReceived")
+	matchesAsFirst  Match[] @relation("MatchFirstUser")
+	matchesAsSecond Match[] @relation("MatchSecondUser")
+	conversationsAsFirst Conversation[] @relation("ConversationFirstUser")
+	conversationsAsSecond Conversation[] @relation("ConversationSecondUser")
+	messageReactions MessageReaction[]
+	callsMade Call[] @relation("CallsMade")
+	callsReceived Call[] @relation("CallsReceived")
+	notificationsReceived Notification[] @relation("NotificationRecipient")
+	notificationsSent Notification[] @relation("NotificationActor")
+	subscriptions Subscription[]
+	payments Payment[]
+	wallet Wallet?
+	giftsSent Gift[] @relation("GiftsSent")
+	giftsReceived Gift[] @relation("GiftsReceived")
+	giftTransactions GiftTransaction[]
+	boosts Boost[]
+	stories Story[]
+	storyViews StoryView[]
+	eventsCreated Event[]
+	eventRegistrations EventRegistration[]
+	verifications Verification[]
+	admin Admin?
+	auditLogs AuditLog[] @relation("AuditActor")
+	supportTicketsCreated SupportTicket[] @relation("TicketCreator")
+	supportTicketsAssigned SupportTicket[] @relation("TicketAssignee")
+	pushSubscriptions PushSubscription[]
+	blogArticles BlogArticle[]
+	sessions Session[]
+	favoritesMade Favorite[] @relation("FavoritesMade")
+	favoritedBy Favorite[] @relation("FavoritedBy")
+}
+
+model DatingPreference {
+	id     String @id @default(cuid())
+	userId String @unique
+
+	interestedIn String
+	minAge       Int @default(18)
+	maxAge       Int @default(60)
+	county       String?
+	city         String?
+
+	user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+	id String @id @default(cuid())
+	userId String
+	type String
+	tokenHash String @unique
+	expiresAt DateTime
+	usedAt DateTime?
+	createdAt DateTime @default(now())
+
+	@@index([userId, type])
+}
+
+model CreditWallet {
+	id String @id @default(cuid())
+	userId String @unique
+	balance Int @default(0)
+	createdAt DateTime @default(now())
+	updatedAt DateTime @updatedAt
+}
+
+model CreditTransaction {
+	id String @id @default(cuid())
+	userId String
+	type String
+	credits Int
+	amountCents Int
+	status String @default("COMPLETED")
+	providerReference String?
+	createdAt DateTime @default(now())
+
+	@@index([userId, createdAt])
+}
+
+model ProfileView {
+	id String @id @default(cuid())
+	viewerId String
+	viewedUserId String
+	createdAt DateTime @default(now())
+
+	@@index([viewedUserId, createdAt])
+	@@index([viewerId, viewedUserId])
+}
+
+model VirtualGift {
+	id String @id @default(cuid())
+	senderId String
+	receiverId String
+	giftType String
+	credits Int
+	createdAt DateTime @default(now())
+
+	@@index([receiverId, createdAt])
+}
+
+model Like {
+	id String @id @default(cuid())
+	isSuperLike Boolean @default(false)
+
+	senderId   String
+	receiverId String
+
+	createdAt DateTime @default(now())
+
+	sender   User @relation("SentLikes", fields: [senderId], references: [id], onDelete: Cascade)
+	receiver User @relation("ReceivedLikes", fields: [receiverId], references: [id], onDelete: Cascade)
+
+	@@unique([senderId, receiverId])
+	@@index([senderId, createdAt])
+	@@index([receiverId, createdAt])
+}
+
+model Message {
+	id String @id @default(cuid())
+
+	senderId   String
+	receiverId String
+	conversationId String?
+
+	content String
+	read    Boolean @default(false)
+
+	createdAt DateTime @default(now())
+
+	sender   User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+	receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+	conversation Conversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+	reactions MessageReaction[]
+	@@index([conversationId, createdAt])
+	@@index([senderId, receiverId, createdAt])
+	@@index([receiverId, read, createdAt])
+}
+
+model ProfilePhoto {
+	id        String   @id @default(cuid())
+	userId    String
+	url       String
+	createdAt DateTime @default(now())
+
+	user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+	@@index([userId])
+}
+
+model Block {
+	id        String   @id @default(cuid())
+	blockerId String
+	blockedId String
+	createdAt DateTime @default(now())
+
+	blocker User @relation("BlocksMade", fields: [blockerId], references: [id], onDelete: Cascade)
+	blocked User @relation("BlocksReceived", fields: [blockedId], references: [id], onDelete: Cascade)
+
+	@@unique([blockerId, blockedId])
+	@@index([blockedId])
+}
+
+model Report {
+	id         String   @id @default(cuid())
+	reporterId String
+	reportedId String
+	reason     String
+	details    String?
+	status     String   @default("PENDING")
+	action     String?
+	updatedAt  DateTime @default(now()) @updatedAt
+	createdAt  DateTime @default(now())
+
+	reporter User @relation("ReportsMade", fields: [reporterId], references: [id], onDelete: Cascade)
+	reported User @relation("ReportsReceived", fields: [reportedId], references: [id], onDelete: Cascade)
+
+	@@index([reportedId])
+}
+
+model HiddenProfile {
+	id        String   @id @default(cuid())
+	userId    String
+	hiddenId  String
+	createdAt DateTime @default(now())
+
+	user   User @relation("HiddenProfilesMade", fields: [userId], references: [id], onDelete: Cascade)
+	hidden User @relation("HiddenProfilesReceived", fields: [hiddenId], references: [id], onDelete: Cascade)
+
+	@@unique([userId, hiddenId])
+	@@index([hiddenId])
+}
+
+model ModerationAudit {
+	id String @id @default(cuid())
+	reportId String
+	moderatorId String
+	targetUserId String
+	action String
+	notes String?
+	createdAt DateTime @default(now())
+
+	@@index([reportId, createdAt])
+	@@index([targetUserId, createdAt])
+}
+
+model UserRiskFlag {
+	id        String   @id @default(cuid())
+	userId    String
+	source    String
+	score     Int
+	level     String
+	reasons   String
+	notes     String?
+	status    String   @default("PENDING_REVIEW")
+	createdAt DateTime @default(now())
+	reviewedAt DateTime?
+	resolvedBy String?
+
+	user User @relation("RiskFlaggedUsers", fields: [userId], references: [id], onDelete: Cascade)
+
+	@@index([userId, status, createdAt])
+	@@index([status, createdAt])
+}
+
+model LoginAttempt {
+	id        String   @id @default(cuid())
+	email     String
+	success   Boolean
+	ipAddress String?
+	userAgent String?
+	createdAt DateTime @default(now())
+
+	@@index([email, createdAt])
+	@@index([ipAddress, createdAt])
+}
+
+model SecurityAuditLog {
+	id           String   @id @default(cuid())
+	actorUserId  String?
+	action       String
+	targetUserId String?
+	ipAddress    String?
+	userAgent    String?
+	metadata     String?
+	createdAt    DateTime @default(now())
+
+	@@index([actorUserId, createdAt])
+	@@index([action, createdAt])
+}
+
+model RateLimitBucket {
+	id        String   @id
+	count     Int      @default(0)
+	resetAt   DateTime
+	updatedAt DateTime @updatedAt
+}
+
+model Session {
+	id String @id @default(cuid())
+	userId String
+	tokenVersion String @unique
+	ipAddress String?
+	userAgent String?
+	createdAt DateTime @default(now())
+	lastActiveAt DateTime @default(now())
+	expiresAt DateTime
+	revokedAt DateTime?
+	user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+	@@index([userId, revokedAt, lastActiveAt])
+	@@index([expiresAt])
+}
+
+model Favorite {
+	userId String
+	favoriteUserId String
+	createdAt DateTime @default(now())
+	user User @relation("FavoritesMade", fields: [userId], references: [id], onDelete: Cascade)
+	favoriteUser User @relation("FavoritedBy", fields: [favoriteUserId], references: [id], onDelete: Cascade)
+	@@id([userId, favoriteUserId])
+	@@index([favoriteUserId, createdAt])
+}
+
+model PushSubscription {
+	id String @id @default(cuid())
+	userId String
+	endpoint String @unique
+	p256dh String
+	auth String
+	createdAt DateTime @default(now())
+	updatedAt DateTime @updatedAt
+	user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+	@@index([userId, createdAt])
+}
+
+model Profile {
+	id String @id @default(cuid())
+	userId String @unique
+	bio String?
+	occupation String?
+	education String?
+	relationshipGoal String?
+	createdAt DateTime @default(now())
+	updatedAt DateTime @updatedAt
+	deletedAt DateTime?
+	user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Photo {
+	id String @id @default(cuid())
+	userId String
+	url String
+	isPrimary Boolean @default(false)
+	createdAt DateTime @default(now())
+	updatedAt DateTime @updatedAt
+	deletedAt DateTime?
+	user User @relation("UserPhotos", fields: [userId], references: [id], onDelete: Cascade)
+	@@index([userId, createdAt])
+}
+
+model Interest {
+	id String @id @default(cuid())
+	name String @unique
+	createdAt DateTime @default(now())
+	updatedAt DateTime @updatedAt
+	userInterests UserInterest[]
+}
+
+model UserInterest {
+	userId String
+	interestId String
+	createdAt DateTime @default(now())
+	user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+	interest Interest @relation(fields: [interestId], references: [id], onDelete: Cascade)
+	@@id([userId, interestId])
+	@@index([interestId])
+}
+
+model Preference {
+	id String @id @default(cuid())
+	userId String @unique
+	interestedIn String @default("Everyone")
+	minAge Int @default(18)
+	maxAge Int @default(60)
+	createdAt DateTime @default(now())
+	updatedAt DateTime @updatedAt
+	user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SuperLike {
+	id String @id @default(cuid())
+	senderId String
+	receiverId String
+	createdAt DateTime @default(now())
+	sender User @relation("SentSuperLikes", fields: [senderId], references: [id], onDelete: Cascade)
+	receiver User @relation("ReceivedSuperLikes", fields: [receiverId], references: [id], onDelete: Cascade)
+	@@unique([senderId, receiverId])
+	@@index([receiverId, createdAt])
+}
+
+model Pass {
+	id String @id @default(cuid())
+	userId String
+	passedUserId String
+	createdAt DateTime @default(now())
+	user User @relation("PassesMade", fields: [userId], references: [id], onDelete: Cascade)
+	passedUser User @relation("PassesReceived", fields: [passedUserId], references: [id], onDelete: Cascade)
+	@@unique([userId, passedUserId])
+	@@index([passedUserId, createdAt])
+}
+
+model Match {
+	id String @id @default(cuid())
+	firstUserId String
+	secondUserId String
+	status String @default("ACTIVE")
+	createdAt DateTime @default(now())
+	updatedAt DateTime @updatedAt
+	deletedAt DateTime?
+	firstUser User @relation("MatchFirstUser", fields: [firstUserId], references: [id], onDelete: Cascade)
+	secondUser User @relation("MatchSecondUser", fields: [secondUserId], references: [id], onDelete: Cascade)
+	@@unique([firstUserId, secondUserId])
+	@@index([secondUserId, status])
+}
+
+model Conversation {
+	id String @id @default(cuid())
+	firstUserId String
+	secondUserId String
+	createdAt DateTime @default(now())
+	updatedAt DateTime @updatedAt
+	deletedAt DateTime?
+	firstUser User @relation("ConversationFirstUser", fields: [firstUserId], references: [id], onDelete: Cascade)
+	secondUser User @relation("ConversationSecondUser", fields: [secondUserId], references: [id], onDelete: Cascade)
+	messages Message[]
+	calls Call[]
+	@@unique([firstUserId, secondUserId])
+	@@index([secondUserId, updatedAt])
+}
+
+model MessageReaction {
+	id String @id @default(cuid())
+	messageId String
+	userId String
+	reaction String
+	createdAt DateTime @default(now())
+	message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+	user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+	@@unique([messageId, userId, reaction])
+}
+
+model Call {
+	id String @id @default(cuid())
+	conversationId String?
+	callerId String
+	receiverId String
+	type String @default("AUDIO")
+	status String @default("RINGING")
+	startedAt DateTime?
+	endedAt DateTime?
+	createdAt DateTime @default(now())
+	updatedAt DateTime @updatedAt
+	caller User @relation("CallsMade", fields: [callerId], references: [id], onDelete: Cascade)
+	receiver User @relation("CallsReceived", fields: [receiverId], references: [id], onDelete: Cascade)
+	conversation Conversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+	@@index([callerId, createdAt])
+	@@index([receiverId, status, createdAt])
+}
+
+model Notification {
+	id String @id @default(cuid())
+	userId String
+	actorUserId String?
+	type String
+	payload String?
+	readAt DateTime?
+	createdAt DateTime @default(now())
+	deletedAt DateTime?
+	recipient User @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
+	actor User? @relation("NotificationActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+	@@index([userId, readAt, createdAt])
+}
+
+model Subscription {
+	id String @id @default(cuid())
+	userId String
+	plan String
+	status String @default("ACTIVE")
+	startedAt DateTime @default(now())
+	endsAt DateTime?
+	createdAt DateTime @default(now())
+	updatedAt DateTime @updatedAt
+	user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+	payments Payment[]
+	@@index([userId, status, endsAt])
+}
+
+model Payment {
+	id String @id @default(cuid())
+	userId String
+	subscriptionId String?
+	amountCents Int
+	currency String @default("USD")
+	status String @default("PENDING")
+	provider String?
+	providerReference String? @unique
+	createdAt DateTime @default(now())
+	updatedAt DateTime @updatedAt
+	user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+	subscription Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+	@@index([userId, createdAt])
+}
+
+model Wallet {
+	id String @id @default(cuid())
+	userId String @unique
+	balance Int @default(0)
+	createdAt DateTime @default(now())
+	updatedAt DateTime @updatedAt
+	user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+	transactions GiftTransaction[]
+}
+
+model Gift {
+	id String @id @default(cuid())
+	senderId String
+	receiverId String
+	type String
+	credits Int
+	createdAt DateTime @default(now())
+	deletedAt DateTime?
+	sender User @relation("GiftsSent", fields: [senderId], references: [id], onDelete: Cascade)
+	receiver User @relation("GiftsReceived", fields: [receiverId], references: [id], onDelete: Cascade)
+	@@index([receiverId, createdAt])
+}
+
+model GiftTransaction {
+	id String @id @default(cuid())
+	userId String
+	walletId String?
+	type String
+	credits Int
+	status String @default("COMPLETED")
+	providerReference String?
+	createdAt DateTime @default(now())
+	user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+	wallet Wallet? @relation(fields: [walletId], references: [id], onDelete: SetNull)
+	@@index([userId, createdAt])
+}
+
+model Boost {
+	id String @id @default(cuid())
+	userId String
+	status String @default("ACTIVE")
+	startedAt DateTime @default(now())
+	endsAt DateTime
+	createdAt DateTime @default(now())
+	user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+	@@index([userId, status, endsAt])
+}
+
+model Story {
+	id String @id @default(cuid())
+	userId String
+	mediaUrl String
+	caption String?
+	createdAt DateTime @default(now())
+	expiresAt DateTime
+	deletedAt DateTime?
+	user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+	views StoryView[]
+	@@index([userId, expiresAt])
+}
+
+model StoryView {
+	id String @id @default(cuid())
+	storyId String
+	userId String
+	createdAt DateTime @default(now())
+	story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+	user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+	@@unique([storyId, userId])
+}
+
+model Event {
+	id String @id @default(cuid())
+	createdById String
+	title String
+	description String?
+	startsAt DateTime
+	endsAt DateTime?
+	location String?
+	createdAt DateTime @default(now())
+	updatedAt DateTime @updatedAt
+	deletedAt DateTime?
+	creator User @relation(fields: [createdById], references: [id], onDelete: Cascade)
+	registrations EventRegistration[]
+	@@index([startsAt, deletedAt])
+}
+
+model EventRegistration {
+	id String @id @default(cuid())
+	eventId String
+	userId String
+	status String @default("REGISTERED")
+	createdAt DateTime @default(now())
+	event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+	user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+	@@unique([eventId, userId])
+}
+
+model Verification {
+	id String @id @default(cuid())
+	userId String
+	type String
+	status String @default("PENDING")
+	providerReference String?
+	verifiedAt DateTime?
+	createdAt DateTime @default(now())
+	updatedAt DateTime @updatedAt
+	user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+	@@index([userId, type, status])
+}
+
+model Admin {
+	id String @id @default(cuid())
+	userId String @unique
+	roleId String?
+	createdAt DateTime @default(now())
+	updatedAt DateTime @updatedAt
+	user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+	role AdminRole? @relation(fields: [roleId], references: [id], onDelete: SetNull)
+}
+
+model AdminRole {
+	id String @id @default(cuid())
+	name String @unique
+	permissions String
+	createdAt DateTime @default(now())
+	updatedAt DateTime @updatedAt
+	admins Admin[]
+}
+
+model AuditLog {
+	id String @id @default(cuid())
+	actorUserId String?
+	action String
+	targetType String?
+	targetId String?
+	metadata String?
+	ipAddress String?
+	createdAt DateTime @default(now())
+	actor User? @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+	@@index([actorUserId, createdAt])
+	@@index([targetType, targetId, createdAt])
+}
+
+model SupportTicket {
+	id String @id @default(cuid())
+	createdById String
+	assignedToId String?
+	subject String
+	description String
+	status String @default("OPEN")
+	priority String @default("NORMAL")
+	createdAt DateTime @default(now())
+	updatedAt DateTime @updatedAt
+	closedAt DateTime?
+	creator User @relation("TicketCreator", fields: [createdById], references: [id], onDelete: Cascade)
+	assignee User? @relation("TicketAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+	@@index([createdById, status])
+	@@index([assignedToId, status])
+}
+
+model BlogArticle {
+	id          String   @id @default(cuid())
+	authorId    String?
+	title       String
+	slug        String   @unique
+	excerpt     String
+	content     String
+	category    String
+	coverImage  String?
+	status      String   @default("DRAFT")
+	publishedAt DateTime?
+	createdAt   DateTime @default(now())
+	updatedAt   DateTime @updatedAt
+	deletedAt   DateTime?
+
+	author User? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+	@@index([category, status, publishedAt])
+	@@index([status, deletedAt, publishedAt])
+}

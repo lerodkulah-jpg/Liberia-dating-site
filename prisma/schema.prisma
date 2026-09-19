@@ -1,0 +1,312 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  firstName    String
+  username     String   @unique
+  email        String   @unique
+  phone        String?
+  password     String
+
+  dateOfBirth  DateTime
+  gender       String
+
+  country      String   @default("Liberia")
+  county       String?
+  city         String?
+
+  bio              String?
+  relationshipGoal String?
+  occupation       String?
+  education        String?
+  height           String?
+  languages        String?
+  interests        String?
+  hobbies          String?
+  religion         String?
+  smokingPreference String?
+  drinkingPreference String?
+  childrenPreference String?
+  profileImage     String?
+
+  verified   Boolean @default(false)
+  emailVerified Boolean @default(false)
+  phoneVerified Boolean @default(false)
+  photoVerified Boolean @default(false)
+  photoVerificationStatus String @default("NOT_SUBMITTED")
+  identityVerificationStatus String @default("NOT_SUBMITTED")
+  membershipPlan String @default("FREE")
+  membershipStatus String @default("ACTIVE")
+  isOnline  Boolean @default(false)
+  isActive  Boolean @default(true)
+  isBanned Boolean @default(false)
+  hideOnlineStatus Boolean @default(false)
+  hideLastActive Boolean @default(false)
+  messagePermission String @default("EVERYONE")
+  incognitoMode Boolean @default(false)
+  profileViewTracking Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  preferences  DatingPreference?
+  profilePhotos ProfilePhoto[]
+
+  sentLikes     Like[] @relation("SentLikes")
+  receivedLikes Like[] @relation("ReceivedLikes")
+
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+
+  blocksMade     Block[] @relation("BlocksMade")
+  blocksReceived Block[] @relation("BlocksReceived")
+  hiddenProfiles HiddenProfile[] @relation("HiddenProfilesMade")
+  hiddenBy       HiddenProfile[] @relation("HiddenProfilesReceived")
+
+  reportsMade     Report[] @relation("ReportsMade")
+  reportsReceived Report[] @relation("ReportsReceived")
+  riskFlags       UserRiskFlag[] @relation("RiskFlaggedUsers")
+}
+
+model DatingPreference {
+  id           String @id @default(cuid())
+  userId       String @unique
+
+  interestedIn String
+  minAge       Int    @default(18)
+  maxAge       Int    @default(60)
+  county       String?
+  city         String?
+
+  user User @relation(
+    fields: [userId],
+    references: [id],
+    onDelete: Cascade
+  )
+}
+
+model VerificationToken {
+  id String @id @default(cuid())
+  userId String
+  type String
+  tokenHash String @unique
+  expiresAt DateTime
+  usedAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId, type])
+}
+
+model CreditWallet {
+  id String @id @default(cuid())
+  userId String @unique
+  balance Int @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CreditTransaction {
+  id String @id @default(cuid())
+  userId String
+  type String
+  credits Int
+  amountCents Int
+  status String @default("COMPLETED")
+  providerReference String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model ProfileView {
+  id String @id @default(cuid())
+  viewerId String
+  viewedUserId String
+  createdAt DateTime @default(now())
+
+  @@index([viewedUserId, createdAt])
+  @@index([viewerId, viewedUserId])
+}
+
+model VirtualGift {
+  id String @id @default(cuid())
+  senderId String
+  receiverId String
+  giftType String
+  credits Int
+  createdAt DateTime @default(now())
+
+  @@index([receiverId, createdAt])
+}
+
+model Like {
+  id         String   @id @default(cuid())
+  isSuperLike Boolean @default(false)
+  senderId   String
+  receiverId String
+  createdAt  DateTime @default(now())
+
+  sender User @relation(
+    "SentLikes",
+    fields: [senderId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  receiver User @relation(
+    "ReceivedLikes",
+    fields: [receiverId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  @@unique([senderId, receiverId])
+  @@index([receiverId])
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  senderId   String
+  receiverId String
+
+  content String
+  read    Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  sender User @relation(
+    "SentMessages",
+    fields: [senderId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  receiver User @relation(
+    "ReceivedMessages",
+    fields: [receiverId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  @@index([senderId])
+  @@index([receiverId])
+}
+
+model ProfilePhoto {
+  id        String   @id @default(cuid())
+  userId    String
+  url       String
+  createdAt DateTime @default(now())
+
+  user User @relation(
+    fields: [userId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  @@index([userId])
+}
+
+model Block {
+  id        String   @id @default(cuid())
+  blockerId String
+  blockedId String
+  createdAt DateTime @default(now())
+
+  blocker User @relation(
+    "BlocksMade",
+    fields: [blockerId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  blocked User @relation(
+    "BlocksReceived",
+    fields: [blockedId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  @@unique([blockerId, blockedId])
+  @@index([blockedId])
+}
+
+model HiddenProfile {
+  id        String   @id @default(cuid())
+  userId    String
+  hiddenId  String
+  createdAt DateTime @default(now())
+
+  user   User @relation("HiddenProfilesMade", fields: [userId], references: [id], onDelete: Cascade)
+  hidden User @relation("HiddenProfilesReceived", fields: [hiddenId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, hiddenId])
+  @@index([hiddenId])
+}
+
+model Report {
+  id         String   @id @default(cuid())
+  reporterId String
+  reportedId String
+  reason     String
+  details    String?
+  status     String   @default("PENDING")
+  action     String?
+  updatedAt  DateTime @default(now()) @updatedAt
+  createdAt  DateTime @default(now())
+
+  reporter User @relation(
+    "ReportsMade",
+    fields: [reporterId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  reported User @relation(
+    "ReportsReceived",
+    fields: [reportedId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  @@index([reportedId])
+}
+
+model ModerationAudit {
+  id String @id @default(cuid())
+  reportId String
+  moderatorId String
+  targetUserId String
+  action String
+  notes String?
+  createdAt DateTime @default(now())
+
+  @@index([reportId, createdAt])
+  @@index([targetUserId, createdAt])
+}
+
+model UserRiskFlag {
+  id        String   @id @default(cuid())
+  userId    String
+  source    String
+  score     Int
+  level     String
+  reasons   String
+  notes     String?
+  status    String   @default("PENDING_REVIEW")
+  createdAt DateTime @default(now())
+  reviewedAt DateTime?
+  resolvedBy String?
+
+  user User @relation("RiskFlaggedUsers", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status, createdAt])
+  @@index([status, createdAt])
+}

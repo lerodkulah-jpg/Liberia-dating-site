@@ -1,0 +1,3 @@
+export default function DiscoverLoading() {
+  return <main className="min-h-screen bg-gray-50 px-4 py-8"><div className="mx-auto max-w-6xl"><div className="motion-skeleton h-12 w-56 rounded-xl" /><div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{[1, 2, 3, 4, 5, 6].map((item) => <div key={item} className="overflow-hidden rounded-2xl bg-white p-4 shadow-sm"><div className="motion-skeleton h-72 rounded-xl" /><div className="mt-4 motion-skeleton h-5 w-2/3 rounded" /><div className="mt-3 motion-skeleton h-4 w-1/2 rounded" /></div>)}</div></div></main>;
+}

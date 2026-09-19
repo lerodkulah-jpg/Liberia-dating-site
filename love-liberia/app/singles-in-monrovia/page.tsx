@@ -1,0 +1,5 @@
+import type { Metadata } from "next";
+import SeoLandingPage from "@/components/SeoLandingPage";
+
+export const metadata: Metadata = { title: "Singles in Monrovia | Love Liberia", description: "Connect with singles in Monrovia who are open to meaningful dating, friendship, and relationships." };
+export default function SinglesInMonroviaPage() { return <SeoLandingPage eyebrow="Singles in Monrovia" title="Meet singles in Monrovia" description="Discover people near Monrovia who are looking for real conversations and genuine connections." paragraphs={["Monrovia is full of people with different stories, interests, and hopes for the future. Love Liberia gives you a focused way to discover compatible singles and start conversations at your own pace.", "Set your preferences, explore profiles, and use privacy and safety controls whenever you need them. A good connection starts with respect, curiosity, and honest intentions."]} links={[{ href: "/dating-in-liberia", label: "Dating across Liberia" }, { href: "/discover", label: "Open Discover" }, { href: "/register", label: "Create a free account" }]} urlPath="/singles-in-monrovia" />; }
