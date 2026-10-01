@@ -64,6 +64,7 @@ export default function LoginPage() {
 
           <button disabled={loading} type="submit" className="mt-6 w-full rounded-full bg-red-600 py-4 font-bold text-white transition hover:bg-red-700 disabled:opacity-60">{loading ? "Signing in..." : "Sign In"}</button>
           {message && <p className="mt-4 text-center text-sm text-red-600">{message}</p>}
+          <p className="mt-4 text-center text-sm"><a href="/forgot-password" className="font-bold text-red-400 hover:underline">Forgot password?</a></p>
           <p className="mt-6 text-center text-sm text-gray-300">Don&apos;t have an account? <a href="/register" className="font-bold text-red-400 hover:underline">Create one</a></p>
         </form>
       </div>
