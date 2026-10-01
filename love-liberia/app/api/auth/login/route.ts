@@ -6,6 +6,9 @@ import { getRequestContext, rateLimit, sameOrigin, writeSecurityAudit } from "@/
 
 export async function POST(request: Request) {
   try {
+    if (!process.env.AUTH_SECRET) {
+      return NextResponse.json({ success: false, message: "Sign-in service is temporarily unavailable." }, { status: 503 });
+    }
     if (!sameOrigin(request)) return NextResponse.json({ success: false, message: "Invalid request origin." }, { status: 403 });
     const limit = await rateLimit(request, "login", 10, 15 * 60_000);
     if (!limit.allowed) return NextResponse.json({ success: false, message: "Too many sign-in attempts. Try again later." }, { status: 429, headers: { "Retry-After": String(limit.retryAfter) } });

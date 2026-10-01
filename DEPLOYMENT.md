@@ -8,7 +8,9 @@ This repository contains the Next.js application in the `love-liberia/` director
 
 ```env
 # Database Configuration
-DATABASE_URL="postgresql://postgres:YOUR_PASSWORD@db.lavsdjxjpihkbngqdazw.supabase.co:5432/postgres"
+# For Vercel/serverless, copy Supabase's Transaction pooler URI (port 6543).
+# Replace the placeholders using Supabase Dashboard > Connect > Transaction pooler.
+DATABASE_URL="postgresql://postgres.PROJECT_REF:YOUR_PASSWORD@aws-0-REGION.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1"
 
 # Authentication and reset links
 AUTH_SECRET="generate-a-long-random-production-secret"
@@ -46,7 +48,7 @@ The Vercel project must use `love-liberia` as its root directory. The commands a
 
 Add this environment variable in the Vercel dashboard:
 
-- `DATABASE_URL` - Your database connection string
+- `DATABASE_URL` - Supabase Transaction pooler connection string for Vercel (port 6543, `pgbouncer=true`)
 - `AUTH_SECRET` - A long random signing secret
 - `NEXT_PUBLIC_APP_URL` - The public HTTPS URL of the app
 - `RESEND_API_KEY` - API key for password reset emails

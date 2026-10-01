@@ -7,17 +7,17 @@ function base64UrlEncode(value: string) {
 }
 
 export async function createAuthToken(userId: string, context?: { ipAddress?: string | null; userAgent?: string | null }) {
+  const secret = process.env.AUTH_SECRET;
+  if (!secret) {
+    throw new Error("AUTH_SECRET is not configured.");
+  }
+
   const tokenVersion = randomUUID();
   await prisma.session.create({ data: { userId, tokenVersion, ipAddress: context?.ipAddress, userAgent: context?.userAgent, expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) } });
   const header = base64UrlEncode(JSON.stringify({ alg: "HS256", typ: "JWT" }));
   const payload = base64UrlEncode(
     JSON.stringify({ sub: userId, sid: tokenVersion, exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30 })
   );
-  const secret = process.env.AUTH_SECRET;
-
-  if (!secret) {
-    throw new Error("AUTH_SECRET is not configured.");
-  }
 
   const signature = createHmac("sha256", secret)
     .update(`${header}.${payload}`)
