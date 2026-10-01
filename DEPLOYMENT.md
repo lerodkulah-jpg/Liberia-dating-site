@@ -29,16 +29,13 @@ Set `DATABASE_URL` in your deployment platform environment variables before the 
 
 Use the following settings in Vercel for this project:
 
+- Root directory: `love-liberia`
 - Framework: `Next.js`
-- Install command: `npm install --prefix love-liberia`
-- Build command: `npm --prefix love-liberia run build`
-- Output directory: `love-liberia/.next`
+- Install command: `npm install`
+- Build command: `npm run build`
+- Output directory: `.next`
 
-If you prefer to set the project root directly in Vercel instead of using the root `vercel.json`, set the project root to:
-
-```text
-love-liberia
-```
+The Vercel project must use `love-liberia` as its root directory. The commands are intentionally relative to that directory; using `--prefix love-liberia` as well would make Vercel look for `love-liberia/love-liberia/package.json`.
 
 Add this environment variable in the Vercel dashboard:
 
