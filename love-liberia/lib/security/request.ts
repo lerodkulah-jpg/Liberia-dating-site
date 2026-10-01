@@ -21,6 +21,16 @@ export function getRequestContext(request: Request) {
  */
 export function publicUrl(request: Request, path: string): string {
   const configured = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL;
+  const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
+  if (process.env.NODE_ENV !== "production" && host) {
+    try {
+      const protocol = request.headers.get("x-forwarded-proto") || new URL(request.url).protocol.replace(":", "");
+      return new URL(path, `${protocol}://${host}`).toString();
+    } catch {
+      // Fall through to the configured URL below.
+    }
+  }
+
   if (configured) {
     try {
       return new URL(path, configured).toString();
@@ -29,7 +39,6 @@ export function publicUrl(request: Request, path: string): string {
     }
   }
 
-  const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
   if (host) {
     try {
       const protocol = request.headers.get("x-forwarded-proto") || new URL(request.url).protocol.replace(":", "");
