@@ -1,4 +1,3 @@
-
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
@@ -8,6 +7,7 @@ export default defineConfig({
     path: "component/prisma/migrations",
   },
   datasource: {
+    // Use environment variable for deployment, fallback to local file for development
     url: process.env.DATABASE_URL ?? "file:./prisma/dev.db",
   },
 });
