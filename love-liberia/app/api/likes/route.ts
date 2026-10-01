@@ -46,20 +46,17 @@ export async function POST(request: Request) {
     });
 
     if (riskAssessment.requiresHumanReview) {
-      const riskFlagClient = (prisma as any).userRiskFlag;
-      if (riskFlagClient?.create) {
-        await riskFlagClient.create({
-          data: {
-            userId: senderId,
-            source: "LIKE_ACTIVITY",
-            score: riskAssessment.score,
-            level: riskAssessment.level,
-            reasons: riskAssessment.reasons.join(", ") || "No major signals",
-            notes: assessAccountRisk(riskAssessment, "LIKE_ACTIVITY").notes,
-            status: "PENDING_REVIEW",
-          },
-        });
-      }
+      await prisma.userRiskFlag.create({
+        data: {
+          userId: senderId,
+          source: "LIKE_ACTIVITY",
+          score: riskAssessment.score,
+          level: riskAssessment.level,
+          reasons: riskAssessment.reasons.join(", ") || "No major signals",
+          notes: assessAccountRisk(riskAssessment, "LIKE_ACTIVITY").notes,
+          status: "PENDING_REVIEW",
+        },
+      });
     }
 
     await prisma.like.create({ data: { senderId, receiverId, isSuperLike } });

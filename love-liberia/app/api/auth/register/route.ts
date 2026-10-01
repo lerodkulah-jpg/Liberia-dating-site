@@ -135,20 +135,17 @@ export async function POST(request: Request) {
     });
 
     if (riskAssessment.requiresHumanReview) {
-      const riskFlagClient = (prisma as any).userRiskFlag;
-      if (riskFlagClient?.create) {
-        await riskFlagClient.create({
-          data: {
-            userId: user.id,
-            source: "REGISTRATION_PROFILE",
-            score: riskAssessment.score,
-            level: riskAssessment.level,
-            reasons: riskAssessment.reasons.join(", ") || "No major signals",
-            notes: assessAccountRisk(riskAssessment, "REGISTRATION_PROFILE").notes,
-            status: "PENDING_REVIEW",
-          },
-        });
-      }
+      await prisma.userRiskFlag.create({
+        data: {
+          userId: user.id,
+          source: "REGISTRATION_PROFILE",
+          score: riskAssessment.score,
+          level: riskAssessment.level,
+          reasons: riskAssessment.reasons.join(", ") || "No major signals",
+          notes: assessAccountRisk(riskAssessment, "REGISTRATION_PROFILE").notes,
+          status: "PENDING_REVIEW",
+        },
+      });
     }
 
     const response = NextResponse.json(

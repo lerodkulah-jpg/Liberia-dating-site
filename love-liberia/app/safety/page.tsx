@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AlertTriangle, BadgeCheck, BellRing, Heart, LockKeyhole, MapPin, MessageSquareWarning, Phone, ShieldAlert, ShieldCheck, Users, Wallet } from "lucide-react";
+import { BadgeCheck, BellRing, Heart, LockKeyhole, MapPin, MessageSquareWarning, Phone, ShieldAlert, ShieldCheck, Users, Wallet } from "lucide-react";
 
 const safetyTips = [
   {

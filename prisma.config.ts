@@ -8,6 +8,6 @@ export default defineConfig({
     path: "component/prisma/migrations",
   },
   datasource: {
-    url: "file:C:/Users/HP/OneDrive/Desktop/Liberia dating site/prisma/dev.db",
+    url: process.env.DATABASE_URL ?? "file:./prisma/dev.db",
   },
 });

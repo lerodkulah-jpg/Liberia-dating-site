@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
  type Privacy = {
@@ -15,6 +16,7 @@ type Person = { id: string; firstName: string; username: string; profileImage: s
 type SecuritySession = { tokenVersion: string; ipAddress: string | null; userAgent: string | null; createdAt: string; lastActiveAt: string; expiresAt: string; current: boolean };
 
 export default function PrivacySettingsPage() {
+  const router = useRouter();
   const [privacy, setPrivacy] = useState<Privacy | null>(null);
   const [blocks, setBlocks] = useState<{ id: string; blocked: Person }[]>([]);
   const [hidden, setHidden] = useState<{ id: string; hidden: Person }[]>([]);
@@ -86,7 +88,7 @@ export default function PrivacySettingsPage() {
   }
 
   async function logoutAll() {
-    if (await securityAction({ action: "logout-all" })) window.location.href = "/login";
+    if (await securityAction({ action: "logout-all" })) router.push("/login");
   }
 
   async function saveCookies() {
@@ -109,7 +111,7 @@ export default function PrivacySettingsPage() {
     const response = await fetch("/api/account/delete", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ confirmation: deletionText }) });
     const data = await response.json();
     if (!response.ok) { setError(data.error || "Unable to delete account."); setDeleting(false); return; }
-    window.location.href = "/register";
+    router.push("/register");
   }
 
   if (!privacy) return <main className="flex min-h-screen items-center justify-center bg-slate-950 text-white"><p>{error || "Loading privacy settings..."}</p></main>;
@@ -180,7 +182,7 @@ export default function PrivacySettingsPage() {
           <button type="button" onClick={() => void saveCookies()} className="mt-4 rounded-lg border border-slate-600 px-4 py-2 text-sm font-bold">Save cookie preferences</button>
         </section>
 
-        <div className="mt-5"><Link href="/login" onClick={(event) => { event.preventDefault(); void fetch("/api/auth/logout", { method: "POST" }).then(() => { window.location.href = "/login"; }); }} className="font-bold text-red-400">Log out</Link></div><nav className="mt-8 flex flex-wrap gap-4 text-sm font-semibold text-rose-400"><Link href="/privacy">Privacy policy</Link><Link href="/terms">Terms of service</Link><Link href="/cookies">Cookie policy</Link></nav>
+        <div className="mt-5"><Link href="/login" onClick={(event) => { event.preventDefault(); void fetch("/api/auth/logout", { method: "POST" }).then(() => router.push("/login")); }} className="font-bold text-red-400">Log out</Link></div><nav className="mt-8 flex flex-wrap gap-4 text-sm font-semibold text-rose-400"><Link href="/privacy">Privacy policy</Link><Link href="/terms">Terms of service</Link><Link href="/cookies">Cookie policy</Link></nav>
       </section>
     </main>
   );

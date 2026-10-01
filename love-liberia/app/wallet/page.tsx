@@ -46,10 +46,13 @@ export default function WalletPage() {
   }
 
   useEffect(() => {
-    refreshWallet().catch((reason: Error) => setError(reason.message));
-    fetch("/api/payments/account", { cache: "no-store" }).then(async (response) => {
-      if (response.ok) setReceivingAccount(await response.json());
-    }).catch(() => undefined);
+    const timer = window.setTimeout(() => {
+      refreshWallet().catch((reason: Error) => setError(reason.message));
+      fetch("/api/payments/account", { cache: "no-store" }).then(async (response) => {
+        if (response.ok) setReceivingAccount(await response.json());
+      }).catch(() => undefined);
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   async function purchase(event: React.FormEvent<HTMLFormElement>) {

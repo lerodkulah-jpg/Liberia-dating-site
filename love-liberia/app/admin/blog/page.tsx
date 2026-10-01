@@ -10,7 +10,10 @@ const blank = { title: "", excerpt: "", content: "", category: categories[0], st
 export default function AdminBlogPage() {
   const [articles, setArticles] = useState<Article[]>([]); const [form, setForm] = useState(blank); const [editingId, setEditingId] = useState(""); const [error, setError] = useState(""); const [message, setMessage] = useState("");
   async function load() { const response = await fetch("/api/admin/blog", { cache: "no-store" }); const data = await response.json(); if (response.ok) setArticles(data.articles || []); else setError(data.error || "Unable to load articles."); }
-  useEffect(() => { void load(); }, []);
+  useEffect(() => {
+    const timer = window.setTimeout(() => { void load(); }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
   function change(field: keyof typeof blank, value: string) { setForm((current) => ({ ...current, [field]: value })); }
   async function save(event: React.FormEvent) { event.preventDefault(); setError(""); const response = await fetch("/api/admin/blog", { method: editingId ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editingId ? { ...form, id: editingId } : form) }); const data = await response.json(); if (!response.ok) { setError(data.error || "Unable to save article."); return; } setMessage(editingId ? "Article updated." : "Article created."); setEditingId(""); setForm(blank); void load(); }
   async function remove(id: string) { if (!window.confirm("Delete this article?")) return; const response = await fetch(`/api/admin/blog?id=${encodeURIComponent(id)}`, { method: "DELETE" }); if (response.ok) { setMessage("Article deleted."); void load(); } }

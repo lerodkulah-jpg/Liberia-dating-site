@@ -13,7 +13,7 @@ export async function POST(request: Request) {
 
   try {
     const payload = await request.json();
-    const { plan, paymentMethod, bankName, bankAccountName, bankAccountNumber, mobileProvider, mobileAccountName, mobileNumber, paymentReference } = payload;
+    const { plan, paymentMethod, bankName, bankAccountName, bankAccountNumber, mobileProvider, mobileAccountName, mobileNumber } = payload;
 
     if (plan !== "PREMIUM" && plan !== "VIP") return NextResponse.json({ error: "Choose a paid membership plan." }, { status: 400 });
 
