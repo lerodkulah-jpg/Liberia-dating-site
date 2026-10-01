@@ -1,6 +1,7 @@
 {
   "framework": "nextjs",
-  "installCommand": "npm ci",
-  "buildCommand": "npm run build",
-  "devCommand": "npm run dev"
+  "installCommand": "npm install --prefix love-liberia",
+  "buildCommand": "npm --prefix love-liberia run build",
+  "devCommand": "npm --prefix love-liberia run dev -- --hostname 0.0.0.0 --port 3000",
+  "outputDirectory": "love-liberia/.next"
 }
