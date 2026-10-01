@@ -32,10 +32,10 @@ async function sendResetEmail(email: string, resetUrl: string) {
 export async function POST(request: Request) {
   if (!sameOrigin(request)) return NextResponse.json({ error: "Invalid request origin." }, { status: 403 });
 
-  const limit = await rateLimit(request, "password-reset", 5, 15 * 60_000);
-  if (!limit.allowed) return NextResponse.json({ message: genericMessage }, { status: 200 });
-
   try {
+    const limit = await rateLimit(request, "password-reset", 5, 15 * 60_000);
+    if (!limit.allowed) return NextResponse.json({ message: genericMessage }, { status: 200 });
+
     const body = await request.json();
     const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
     if (!email || email.length > 254) return NextResponse.json({ message: genericMessage });
@@ -67,6 +67,6 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Password reset request error:", error);
-    return NextResponse.json({ error: "Unable to request a password reset." }, { status: 500 });
+    return NextResponse.json({ error: "Password reset service is temporarily unavailable." }, { status: 503 });
   }
 }
