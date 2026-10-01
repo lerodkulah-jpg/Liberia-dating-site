@@ -8,7 +8,7 @@ This repository contains the Next.js application in the `love-liberia/` director
 
 ```env
 # Database Configuration
-DATABASE_URL="file:./prisma/dev.db"
+DATABASE_URL="postgresql://postgres:YOUR_PASSWORD@db.lavsdjxjpihkbngqdazw.supabase.co:5432/postgres"
 
 # Authentication and reset links
 AUTH_SECRET="generate-a-long-random-production-secret"
@@ -18,8 +18,6 @@ NEXT_PUBLIC_APP_URL="https://your-domain.example"
 RESEND_API_KEY="re_..."
 PASSWORD_RESET_FROM_EMAIL="Love Liberia <no-reply@your-domain.example>"
 
-# Production example with PostgreSQL:
-# DATABASE_URL="postgresql://username:password@host:port/database_name"
 ```
 
 Set `DATABASE_URL` in your deployment platform environment variables before the build starts.

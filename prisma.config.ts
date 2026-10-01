@@ -8,6 +8,6 @@ export default defineConfig({
   },
   datasource: {
     // Use environment variable for deployment, fallback to local file for development
-    url: process.env.DATABASE_URL ?? "file:./prisma/dev.db",
+    url: process.env.DATABASE_URL ?? "postgresql://postgres:password@localhost:5432/love_liberia",
   },
 });
