@@ -20,9 +20,14 @@ export default function ForgotPasswordPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
-      const result = await response.json();
-      setMessage(result.message || result.error || "Unable to request a reset link.");
-      if (result.developmentResetUrl) setResetUrl(result.developmentResetUrl);
+      const contentType = response.headers.get("content-type") || "";
+      const result = contentType.includes("application/json") ? await response.json() : null;
+      if (!response.ok) {
+        setMessage(result?.error || `The server could not process the request (${response.status}).`);
+        return;
+      }
+      setMessage(result?.message || "Unable to request a reset link.");
+      if (result?.developmentResetUrl) setResetUrl(result.developmentResetUrl);
     } catch {
       setMessage("Unable to connect to the server.");
     } finally {
