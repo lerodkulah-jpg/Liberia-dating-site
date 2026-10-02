@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { env } from "node:process";
 import { defineConfig } from "prisma/config";
 
 export default defineConfig({
@@ -8,6 +9,6 @@ export default defineConfig({
   },
   datasource: {
     // Use environment variable for deployment, fallback to local file for development
-    url: process.env.DATABASE_URL ?? "postgresql://postgres:password@localhost:5432/love_liberia",
+    url: env.DATABASE_URL ?? "postgresql://postgres:password@localhost:5432/love_liberia",
   },
 });

@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
-    "types": ["node"]
+    "types": ["node"],
+    "skipLibCheck": true
   },
-  "files": ["./workspace.d.ts"]
+  "files": ["./workspace.d.ts", "./prisma.config.ts"]
 }
