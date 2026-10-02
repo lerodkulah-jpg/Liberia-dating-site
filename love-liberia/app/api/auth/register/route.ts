@@ -60,6 +60,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: "Please enter valid account details." }, { status: 400 });
     }
 
+    if (typeof dateOfBirth !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)) {
+      return NextResponse.json({ success: false, message: "Please enter a valid date of birth." }, { status: 400 });
+    }
+
+    const parsedDateOfBirth = new Date(`${dateOfBirth}T00:00:00.000Z`);
+    if (Number.isNaN(parsedDateOfBirth.getTime()) || parsedDateOfBirth.toISOString().slice(0, 10) !== dateOfBirth) {
+      return NextResponse.json({ success: false, message: "Please enter a valid date of birth." }, { status: 400 });
+    }
+
+    const today = new Date();
+    const latestAllowedBirthDate = new Date(Date.UTC(today.getUTCFullYear() - 18, today.getUTCMonth(), today.getUTCDate()));
+    const earliestAllowedBirthDate = new Date(Date.UTC(today.getUTCFullYear() - 120, today.getUTCMonth(), today.getUTCDate()));
+    if (parsedDateOfBirth > latestAllowedBirthDate || parsedDateOfBirth < earliestAllowedBirthDate) {
+      return NextResponse.json({ success: false, message: "You must be between 18 and 120 years old to create an account." }, { status: 400 });
+    }
+
     if (password.length < 8) {
       return NextResponse.json(
         {
@@ -92,7 +108,7 @@ export async function POST(request: Request) {
         email: normalizedEmail,
         phone,
         password: await hashPassword(password),
-        dateOfBirth: new Date(dateOfBirth),
+        dateOfBirth: parsedDateOfBirth,
         gender,
         country: country || "Liberia",
         county,

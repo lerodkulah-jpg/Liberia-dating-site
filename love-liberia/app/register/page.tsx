@@ -7,6 +7,10 @@ import { useRouter } from "next/navigation";
 export default function RegisterPage() {
   const registrationDraftKey = "love-liberia-registration-draft";
   const router = useRouter();
+  const today = new Date();
+  const latestBirthDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+  const earliestBirthDate = new Date(today.getFullYear() - 120, today.getMonth(), today.getDate());
+  const formatDate = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
@@ -101,7 +105,7 @@ export default function RegisterPage() {
           <input name="username" required placeholder="Username" className="min-h-12 min-w-0 rounded-xl border border-gray-700 bg-gray-950 p-3 text-white placeholder:text-gray-400" />
           <input name="email" required type="email" placeholder="Email" className="min-h-12 min-w-0 rounded-xl border border-gray-700 bg-gray-950 p-3 text-white placeholder:text-gray-400 sm:col-span-2" />
           <input name="password" required minLength={8} type="password" placeholder="Password (8+ characters)" className="min-h-12 rounded-xl border border-gray-700 bg-gray-950 p-3 text-white placeholder:text-gray-400 sm:col-span-2" />
-          <input name="dateOfBirth" required type="date" className="min-h-12 rounded-xl border border-gray-700 bg-gray-950 p-3 text-white" />
+          <input name="dateOfBirth" required type="date" min={formatDate(earliestBirthDate)} max={formatDate(latestBirthDate)} className="min-h-12 rounded-xl border border-gray-700 bg-gray-950 p-3 text-white" />
           <select name="gender" required defaultValue="" className="min-h-12 rounded-xl border border-gray-700 bg-gray-950 p-3 text-white">
             <option value="" disabled>Gender</option>
             <option>Woman</option>
