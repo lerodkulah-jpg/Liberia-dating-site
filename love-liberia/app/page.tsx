@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { useState } from "react";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const footerInfo = {
   "Discover People": "Set your location, age range, interests, and relationship goals to find compatible Liberians in Liberia and the diaspora.",
@@ -85,6 +86,7 @@ export default function Home() {
 
           {/* Desktop Buttons */}
           <div className="hidden items-center gap-3 md:flex">
+            <ThemeToggle />
             <a
               href="/login"
               className="rounded-full px-5 py-2.5 text-sm font-bold transition hover:bg-gray-100 dark:hover:bg-gray-900"
@@ -101,6 +103,8 @@ export default function Home() {
           </div>
 
           {/* Mobile Button */}
+          <div className="flex items-center gap-2 md:hidden">
+            <ThemeToggle />
           <button
             onClick={() => setMobileMenu(!mobileMenu)}
             className="flex min-h-11 min-w-11 items-center justify-center rounded-xl p-2 transition hover:bg-gray-100 dark:hover:bg-gray-900 md:hidden"
@@ -110,6 +114,7 @@ export default function Home() {
           >
             {mobileMenu ? <X size={25} /> : <Menu size={25} />}
           </button>
+          </div>
         </div>
 
         {/* Mobile Menu */}
