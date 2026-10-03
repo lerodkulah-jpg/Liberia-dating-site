@@ -175,7 +175,7 @@ export default function Home() {
       {/* HERO */}
       <section
         id="home"
-        className="relative overflow-hidden pt-32"
+        className="relative overflow-hidden pt-24"
       >
         {/* Background */}
         <div className="absolute inset-0 z-0">
@@ -184,7 +184,7 @@ export default function Home() {
           <div className="absolute right-0 top-40 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl" />
         </div>
 
-        <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-14 px-5 pb-20 lg:grid-cols-2 lg:px-8 lg:pb-28">
+        <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-10 px-5 pb-14 lg:grid-cols-2 lg:px-8 lg:pb-16">
           {/* Hero Text */}
           <div className="relative isolate max-w-2xl">
             <div className="hero-butterflies" aria-hidden="true">
@@ -257,7 +257,7 @@ export default function Home() {
             <div className="absolute -left-6 bottom-10 h-28 w-28 rounded-full bg-blue-500/20 blur-2xl" />
 
             <div className="relative overflow-hidden rounded-4xl border border-gray-200 bg-white p-3 shadow-2xl dark:border-gray-800 dark:bg-gray-900">
-              <div className="couple-scene relative flex h-125 items-end overflow-hidden rounded-3xl">
+              <div className="couple-scene relative flex h-112 items-end overflow-hidden rounded-3xl">
                 <div className="connection-butterflies" aria-hidden="true">
                   <span>🦋</span>
                   <span>🦋</span>
@@ -293,22 +293,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* STATS */}
-      <section className="border-y border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900/40">
-        <div className="mx-auto grid max-w-7xl grid-cols-2 divide-x divide-gray-200 px-5 py-10 dark:divide-gray-800 md:grid-cols-4 lg:px-8">
-          <Stat number="18+" label="Members only" />
-          <Stat number="24/7" label="Connections" />
-          <Stat number="100%" label="Liberia focused" />
-          <Stat number="∞" label="Possibilities" />
-        </div>
-      </section>
-
-      {/* FEATURES */}
+      {/* FEATURES AND HOW IT WORKS */}
       <section
-        id="discover-people"
-        className="mx-auto max-w-7xl px-5 py-24 lg:px-8"
+        id="features"
+        className="mx-auto max-w-7xl scroll-mt-24 px-5 py-14 lg:px-8"
       >
-        <div className="mx-auto max-w-2xl text-center">
+        <div id="discover-people" className="scroll-mt-24">
+          <div className="mx-auto max-w-2xl text-center">
           <p className="font-bold uppercase tracking-widest text-red-600">
             Why Love Liberia?
           </p>
@@ -321,9 +312,9 @@ export default function Home() {
             Everything you need to meet people, build trust and
             discover someone special.
           </p>
-        </div>
+          </div>
 
-        <div className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <FeatureCard
             icon={<Heart />}
             title="Smart Matching"
@@ -360,25 +351,20 @@ export default function Home() {
             description="Discover events, stories and communities built around friendship and relationships."
           />
         </div>
-      </section>
+        </div>
 
-      {/* HOW IT WORKS */}
-      <section
-        id="how"
-        className="bg-gray-50 py-24 dark:bg-gray-900/50"
-      >
-        <div className="mx-auto max-w-7xl px-5 lg:px-8">
+        <div id="how" className="mt-12 scroll-mt-24 border-t border-gray-200 pt-10 dark:border-gray-800">
           <div className="mx-auto max-w-2xl text-center">
             <p className="font-bold uppercase tracking-widest text-red-600">
               Simple & Easy
             </p>
 
-            <h2 className="mt-3 text-4xl font-black sm:text-5xl">
+            <h2 className="mt-2 text-3xl font-black sm:text-4xl">
               How it works
             </h2>
           </div>
 
-          <div className="mt-16 grid gap-10 md:grid-cols-3">
+          <div className="mt-8 grid gap-6 md:grid-cols-3">
             <Step
               number="01"
               title="Create your profile"
@@ -403,10 +389,10 @@ export default function Home() {
       {/* SAFETY */}
       <section
         id="safety"
-        className="mx-auto max-w-7xl px-5 py-24 lg:px-8"
+        className="mx-auto max-w-7xl scroll-mt-24 px-5 py-14 lg:px-8"
       >
-        <div className="overflow-hidden rounded-4xl bg-gray-950 p-6 text-white sm:p-12 lg:p-16">
-          <div className="grid items-center gap-12 lg:grid-cols-2">
+        <div className="overflow-hidden rounded-4xl bg-gray-950 p-5 text-white sm:p-8 lg:p-10">
+          <div className="grid items-center gap-8 lg:grid-cols-2">
             <div>
               <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-600">
                 <ShieldCheck size={28} />
@@ -431,7 +417,7 @@ export default function Home() {
               </a>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2">
               <SafetyItem text="Profile verification" />
               <SafetyItem text="Block & report tools" />
               <SafetyItem text="Privacy controls" />
@@ -444,9 +430,9 @@ export default function Home() {
       </section>
 
       {/* CTA */}
-      <section className="px-5 pb-24 lg:px-8">
-        <div className="mx-auto max-w-5xl overflow-hidden rounded-4xl bg-linear-to-br from-red-600 to-red-800 px-6 py-16 text-center text-white shadow-2xl sm:px-12">
-          <Heart className="mx-auto mb-5 fill-white" size={40} />
+      <section className="px-5 pb-14 lg:px-8">
+        <div className="mx-auto max-w-5xl overflow-hidden rounded-4xl bg-linear-to-br from-red-600 to-red-800 px-6 py-12 text-center text-white shadow-2xl sm:px-12">
+          <Heart className="mx-auto mb-4 fill-white" size={36} />
 
           <h2 className="text-3xl font-black sm:text-5xl">
             Your story could start today.
@@ -469,8 +455,8 @@ export default function Home() {
 
       {/* FOOTER */}
       <footer className="border-t border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-950">
-        <div className="mx-auto max-w-7xl px-5 py-14 lg:px-8">
-          <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
+        <div className="mx-auto max-w-7xl px-5 py-10 lg:px-8">
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
             <div>
               <div className="flex items-center gap-3">
                 <img src="/icon.svg" alt="Love Liberia logo" className="h-10 w-10 rounded-full object-cover ring-2 ring-red-500/70 ring-offset-2 ring-offset-gray-50 dark:ring-offset-gray-950" />
@@ -579,28 +565,6 @@ export default function Home() {
         </div>
       )}
     </main>
-  );
-}
-
-/* STAT COMPONENT */
-
-function Stat({
-  number,
-  label,
-}: {
-  number: string;
-  label: string;
-}) {
-  return (
-    <div className="px-4 text-center">
-      <p className="text-3xl font-black text-red-600">
-        {number}
-      </p>
-
-      <p className="mt-1 text-xs font-medium text-gray-500 sm:text-sm">
-        {label}
-      </p>
-    </div>
   );
 }
 
