@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
   --background: #ffffff;
@@ -6,18 +7,18 @@
 }
 
 .dark {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #030712;
+  --foreground: #f9fafb;
 }
 
 html {
-  background-color: #ffffff;
+  background-color: var(--background);
   scroll-behavior: smooth;
 }
 
 html,
 body {
-  background-color: #ffffff;
+  background-color: var(--background);
   min-width: 320px;
   overflow-x: hidden;
 }

@@ -131,23 +131,23 @@ export default function PrivacySettingsPage() {
     router.push("/register");
   }
 
-  if (!privacy) return <main className="flex min-h-screen items-center justify-center bg-slate-950 text-white"><p>{error || "Loading privacy settings..."}</p></main>;
+  if (!privacy) return <main className="flex min-h-screen items-center justify-center bg-white text-gray-900 dark:bg-slate-950 dark:text-white"><p>{error || "Loading privacy settings..."}</p></main>;
 
   const toggle = (field: keyof Privacy, label: string, description: string) => (
-    <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-800 bg-slate-950 p-4">
+    <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
       <input type="checkbox" checked={Boolean(privacy[field])} onChange={(event) => void savePrivacy(field, event.target.checked)} className="mt-1 h-5 w-5 accent-rose-500" />
-      <span><span className="block font-semibold">{label}</span><span className="text-sm text-slate-400">{description}</span></span>
+      <span><span className="block font-semibold">{label}</span><span className="text-sm text-slate-600 dark:text-slate-400">{description}</span></span>
     </label>
   );
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
+    <main className="min-h-screen bg-white text-gray-900 dark:bg-slate-950 dark:text-white">
       <section className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
         <Link href="/dashboard" className="text-sm font-bold text-rose-400">Back to dashboard</Link>
         <h1 className="mt-3 text-3xl font-black">Privacy & data settings</h1>
-        <p className="mt-2 text-slate-400">Choose who can find, contact, and see activity from your account.</p>
-        {status && <p className="mt-4 rounded-lg bg-emerald-950 p-3 text-sm text-emerald-300">{status}</p>}
-        {error && <p className="mt-4 rounded-lg bg-red-950 p-3 text-sm text-red-200">{error}</p>}
+        <p className="mt-2 text-slate-600 dark:text-slate-400">Choose who can find, contact, and see activity from your account.</p>
+        {status && <p className="mt-4 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">{status}</p>}
+        {error && <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">{error}</p>}
 
         <section className="mt-8 space-y-3">
           <h2 className="text-xl font-bold">Visibility and contact</h2>
@@ -155,44 +155,44 @@ export default function PrivacySettingsPage() {
           {toggle("hideLastActive", "Hide last active", "Do not show your recent activity time.")}
           {toggle("incognitoMode", "Incognito mode", "Stay out of recommendations until you choose to interact.")}
           {toggle("profileViewTracking", "Show profile visitors", "Allow your profile visits to appear in visitor lists.")}
-          <label className="block rounded-xl border border-slate-800 bg-slate-950 p-4 font-semibold">Who can message you<select value={privacy.messagePermission} onChange={(event) => void savePrivacy("messagePermission", event.target.value)} className="mt-2 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 font-normal"><option value="EVERYONE">Everyone</option><option value="MATCHES">Matches only</option></select></label>
+          <label className="block rounded-xl border border-gray-200 bg-white p-4 font-semibold dark:border-slate-800 dark:bg-slate-950">Who can message you<select value={privacy.messagePermission} onChange={(event) => void savePrivacy("messagePermission", event.target.value)} className="mt-2 min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 font-normal dark:border-slate-700 dark:bg-slate-900"><option value="EVERYONE">Everyone</option><option value="MATCHES">Matches only</option></select></label>
         </section>
 
-        <section className="mt-8 rounded-2xl border border-slate-800 bg-slate-900 p-5">
+        <section className="mt-8 rounded-2xl border border-gray-200 bg-gray-50 p-5 dark:border-slate-800 dark:bg-slate-900">
           <h2 className="text-xl font-bold">Account preferences</h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2"><label className="text-sm font-semibold">Language<select value={language} onChange={(event) => { setLanguage(event.target.value); savePreference("love-liberia-language", event.target.value); }} className="mt-2 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 font-normal"><option>English</option><option>French</option></select></label><label className="text-sm font-semibold">Theme<select value={theme} onChange={(event) => { const nextTheme = event.target.value; setTheme(nextTheme); savePreference("love-liberia-theme", nextTheme); }} className="mt-2 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 font-normal"><option value="dark">Dark</option><option value="light">Light</option><option value="system">System</option></select></label></div>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2"><label className="text-sm font-semibold">Language<select value={language} onChange={(event) => { setLanguage(event.target.value); savePreference("love-liberia-language", event.target.value); }} className="mt-2 min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 font-normal dark:border-slate-700 dark:bg-slate-950"><option>English</option><option>French</option></select></label><label className="text-sm font-semibold">Theme<select value={theme} onChange={(event) => { const nextTheme = event.target.value; setTheme(nextTheme); savePreference("love-liberia-theme", nextTheme); }} className="mt-2 min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 font-normal dark:border-slate-700 dark:bg-slate-950"><option value="dark">Dark</option><option value="light">Light</option><option value="system">System</option></select></label></div>
         </section>
 
-        <section className="mt-5 rounded-2xl border border-slate-800 bg-slate-900 p-5">
+        <section className="mt-5 rounded-2xl border border-gray-200 bg-gray-50 p-5 dark:border-slate-800 dark:bg-slate-900">
           <h2 className="text-xl font-bold">Security settings</h2>
-          <form onSubmit={changePassword} className="mt-4 grid gap-3 sm:grid-cols-2"><input type="password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} placeholder="Current password" className="min-h-11 rounded-lg border border-slate-700 bg-slate-950 px-3" required /><input type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} placeholder="New password (8+ characters)" minLength={8} className="min-h-11 rounded-lg border border-slate-700 bg-slate-950 px-3" required /><button className="rounded-lg bg-rose-600 px-4 py-3 text-sm font-bold sm:col-span-2">Change password</button></form>
-          <div className="mt-6 border-t border-slate-800 pt-5"><div className="flex flex-wrap items-center justify-between gap-3"><div><h3 className="font-bold">Two-factor authentication</h3><p className="mt-1 text-sm text-slate-400">Add an extra verification step when signing in.</p></div><button type="button" onClick={() => void securityAction({ action: "two-factor", enabled: !twoFactorEnabled })} className={`rounded-lg px-4 py-2 text-sm font-bold ${twoFactorEnabled ? "bg-emerald-700 text-white" : "border border-slate-600"}`}>{twoFactorEnabled ? "Enabled" : "Enable"}</button></div></div>
-          <div className="mt-6 border-t border-slate-800 pt-5"><div className="flex flex-wrap items-center justify-between gap-3"><div><h3 className="font-bold">Active sessions</h3><p className="mt-1 text-sm text-slate-400">Review devices that have accessed your account.</p></div><button type="button" onClick={() => void logoutAll()} className="rounded-lg bg-red-700 px-4 py-2 text-sm font-bold">Log out all devices</button></div><div className="mt-4 space-y-2">{sessions.map((session, index) => <div key={session.tokenVersion || `${session.userAgent || "session"}-${session.ipAddress || "ip"}-${index}`} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-800 p-3 text-sm"><span>{session.current ? "This device" : session.userAgent || "Unknown device"} · {session.ipAddress || "Unknown IP"}</span>{!session.current && <button type="button" onClick={() => void securityAction({ action: "revoke-session", tokenVersion: session.tokenVersion })} className="font-bold text-rose-400">Revoke</button>}</div>)}</div></div>
+          <form onSubmit={changePassword} className="mt-4 grid gap-3 sm:grid-cols-2"><input type="password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} placeholder="Current password" className="min-h-11 rounded-lg border border-gray-300 bg-white px-3 dark:border-slate-700 dark:bg-slate-950" required /><input type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} placeholder="New password (8+ characters)" minLength={8} className="min-h-11 rounded-lg border border-gray-300 bg-white px-3 dark:border-slate-700 dark:bg-slate-950" required /><button className="rounded-lg bg-rose-600 px-4 py-3 text-sm font-bold text-white sm:col-span-2">Change password</button></form>
+          <div className="mt-6 border-t border-gray-200 pt-5 dark:border-slate-800"><div className="flex flex-wrap items-center justify-between gap-3"><div><h3 className="font-bold">Two-factor authentication</h3><p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Add an extra verification step when signing in.</p></div><button type="button" onClick={() => void securityAction({ action: "two-factor", enabled: !twoFactorEnabled })} className={`rounded-lg px-4 py-2 text-sm font-bold ${twoFactorEnabled ? "bg-emerald-700 text-white" : "border border-gray-300 dark:border-slate-600"}`}>{twoFactorEnabled ? "Enabled" : "Enable"}</button></div></div>
+          <div className="mt-6 border-t border-gray-200 pt-5 dark:border-slate-800"><div className="flex flex-wrap items-center justify-between gap-3"><div><h3 className="font-bold">Active sessions</h3><p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Review devices that have accessed your account.</p></div><button type="button" onClick={() => void logoutAll()} className="rounded-lg bg-red-700 px-4 py-2 text-sm font-bold text-white">Log out all devices</button></div><div className="mt-4 space-y-2">{sessions.map((session, index) => <div key={session.tokenVersion || `${session.userAgent || "session"}-${session.ipAddress || "ip"}-${index}`} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gray-200 p-3 text-sm dark:border-slate-800"><span>{session.current ? "This device" : session.userAgent || "Unknown device"} · {session.ipAddress || "Unknown IP"}</span>{!session.current && <button type="button" onClick={() => void securityAction({ action: "revoke-session", tokenVersion: session.tokenVersion })} className="font-bold text-rose-500 dark:text-rose-400">Revoke</button>}</div>)}</div></div>
         </section>
 
-        <section className="mt-8 rounded-2xl border border-slate-800 bg-slate-900 p-5">
+        <section className="mt-8 rounded-2xl border border-gray-200 bg-gray-50 p-5 dark:border-slate-800 dark:bg-slate-900">
           <h2 className="text-xl font-bold">Blocked profiles</h2>
-          {blocks.length === 0 ? <p className="mt-3 text-sm text-slate-400">You have not blocked anyone.</p> : blocks.map((item) => <div key={item.id} className="mt-3 flex items-center justify-between gap-3 border-b border-slate-800 pb-3"><span>@{item.blocked.username}</span><button type="button" onClick={() => void unblock(item.blocked.id)} className="text-sm font-bold text-rose-400">Unblock</button></div>)}
+          {blocks.length === 0 ? <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">You have not blocked anyone.</p> : blocks.map((item) => <div key={item.id} className="mt-3 flex items-center justify-between gap-3 border-b border-gray-200 pb-3 dark:border-slate-800"><span>@{item.blocked.username}</span><button type="button" onClick={() => void unblock(item.blocked.id)} className="text-sm font-bold text-rose-500 dark:text-rose-400">Unblock</button></div>)}
         </section>
 
-        <section className="mt-5 rounded-2xl border border-slate-800 bg-slate-900 p-5">
+        <section className="mt-5 rounded-2xl border border-gray-200 bg-gray-50 p-5 dark:border-slate-800 dark:bg-slate-900">
           <h2 className="text-xl font-bold">Hidden profiles</h2>
-          {hidden.length === 0 ? <p className="mt-3 text-sm text-slate-400">You have not hidden any profiles.</p> : hidden.map((item) => <div key={item.id} className="mt-3 flex items-center justify-between gap-3 border-b border-slate-800 pb-3"><span>@{item.hidden.username}</span><button type="button" onClick={() => void unhide(item.hidden.id)} className="text-sm font-bold text-rose-400">Show again</button></div>)}
+          {hidden.length === 0 ? <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">You have not hidden any profiles.</p> : hidden.map((item) => <div key={item.id} className="mt-3 flex items-center justify-between gap-3 border-b border-gray-200 pb-3 dark:border-slate-800"><span>@{item.hidden.username}</span><button type="button" onClick={() => void unhide(item.hidden.id)} className="text-sm font-bold text-rose-500 dark:text-rose-400">Show again</button></div>)}
         </section>
 
-        <section className="mt-5 rounded-2xl border border-slate-800 bg-slate-900 p-5">
+        <section className="mt-5 rounded-2xl border border-gray-200 bg-gray-50 p-5 dark:border-slate-800 dark:bg-slate-900">
           <h2 className="text-xl font-bold">Data controls</h2>
-          <p className="mt-2 text-sm text-slate-400">Download a copy of your profile, preferences, photos, connections, and messages.</p>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">Download a copy of your profile, preferences, photos, connections, and messages.</p>
           <a href="/api/account/export" className="mt-4 inline-flex rounded-lg bg-rose-600 px-4 py-3 text-sm font-bold text-white">Download my data</a>
-          <div className="mt-6 border-t border-slate-800 pt-5">
+          <div className="mt-6 border-t border-gray-200 pt-5 dark:border-slate-800">
             <h3 className="font-bold text-red-300">Delete account</h3>
-            <p className="mt-2 text-sm text-slate-400">This permanently removes your account and associated data. Type the confirmation phrase to continue.</p>
-            <input value={deletionText} onChange={(event) => setDeletionText(event.target.value)} placeholder="DELETE MY ACCOUNT" className="mt-3 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-3" />
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">This permanently removes your account and associated data. Type the confirmation phrase to continue.</p>
+            <input value={deletionText} onChange={(event) => setDeletionText(event.target.value)} placeholder="DELETE MY ACCOUNT" className="mt-3 min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 dark:border-slate-700 dark:bg-slate-950" />
             <button type="button" disabled={deleting || deletionText !== "DELETE MY ACCOUNT"} onClick={() => void deleteAccount()} className="mt-3 rounded-lg bg-red-700 px-4 py-3 text-sm font-bold disabled:opacity-50">{deleting ? "Deleting..." : "Permanently delete account"}</button>
           </div>
         </section>
 
-        <section className="mt-5 rounded-2xl border border-slate-800 bg-slate-900 p-5">
+        <section className="mt-5 rounded-2xl border border-gray-200 bg-gray-50 p-5 dark:border-slate-800 dark:bg-slate-900">
           <h2 className="text-xl font-bold">Cookie preferences</h2>
           <label className="mt-4 flex gap-3 text-sm"><input type="checkbox" checked={cookiePreferences.analytics} onChange={(event) => setCookiePreferences((current) => ({ ...current, analytics: event.target.checked }))} /> Analytics cookies</label>
           <label className="mt-3 flex gap-3 text-sm"><input type="checkbox" checked={cookiePreferences.personalization} onChange={(event) => setCookiePreferences((current) => ({ ...current, personalization: event.target.checked }))} /> Personalization cookies</label>
