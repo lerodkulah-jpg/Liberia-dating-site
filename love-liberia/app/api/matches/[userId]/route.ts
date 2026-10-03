@@ -62,7 +62,7 @@ export async function GET(
         childrenPreference: true,
         profileImage: true,
         profilePhotos: { select: { id: true, url: true }, orderBy: { createdAt: "asc" } },
-        verified: true,
+        photoVerified: true,
         isOnline: true,
         hideOnlineStatus: true,
         profileViewTracking: true,
@@ -118,6 +118,7 @@ export async function GET(
     return NextResponse.json({
       user: {
         ...user,
+        verified: user.photoVerified,
         age,
         compatibilityPercentage,
         mutualInterests,

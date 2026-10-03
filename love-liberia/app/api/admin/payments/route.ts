@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { verifyAuthToken } from "@/lib/auth";
 import { can } from "@/lib/admin/permissions";
 import { describePayoutAccount } from "@/lib/payments/account";
+import { sameOrigin, writeSecurityAudit } from "@/lib/security/request";
 
 /**
  * Admin view of the payment configuration.
@@ -46,6 +47,22 @@ export async function GET() {
       },
     },
   });
+  const pendingCreditTransactions = await prisma.creditTransaction.findMany({
+    where: {
+      status: "PENDING",
+      OR: [
+        { providerReference: { startsWith: "manual_bank_" } },
+        { providerReference: { startsWith: "manual_mobile_" } },
+      ],
+    },
+    orderBy: { createdAt: "asc" },
+  });
+  const creditUserIds = [...new Set(pendingCreditTransactions.map((transaction) => transaction.userId))];
+  const creditUsers = await prisma.user.findMany({
+    where: { id: { in: creditUserIds } },
+    select: { id: true, firstName: true, username: true, email: true, phone: true },
+  });
+  const creditUsersById = new Map(creditUsers.map((user) => [user.id, user]));
 
   return NextResponse.json({
     payoutAccount: describePayoutAccount(),
@@ -64,10 +81,21 @@ export async function GET() {
       user: payment.user,
       subscription: payment.subscription,
     })),
+    pendingCreditPurchases: pendingCreditTransactions.map((transaction) => ({
+      id: transaction.id,
+      type: transaction.type,
+      credits: transaction.credits,
+      amountCents: transaction.amountCents,
+      status: transaction.status,
+      providerReference: transaction.providerReference,
+      createdAt: transaction.createdAt,
+      user: creditUsersById.get(transaction.userId) ?? null,
+    })),
   });
 }
 
 export async function PATCH(request: Request) {
+  if (!sameOrigin(request)) return NextResponse.json({ error: "Invalid request origin." }, { status: 403 });
   const token = (await cookies()).get("love_liberia_token")?.value;
   const userId = token ? await verifyAuthToken(token) : null;
   if (!userId) return NextResponse.json({ error: "You must be logged in." }, { status: 401 });
@@ -79,10 +107,54 @@ export async function PATCH(request: Request) {
 
   const payload = await request.json();
   const paymentId = typeof payload.paymentId === "string" ? payload.paymentId : "";
+  const creditTransactionId = typeof payload.creditTransactionId === "string" ? payload.creditTransactionId : "";
   const action = typeof payload.action === "string" ? payload.action : "";
 
-  if (!paymentId || !["APPROVE", "REJECT"].includes(action)) {
-    return NextResponse.json({ error: "A valid paymentId and action are required." }, { status: 400 });
+  if (!["APPROVE", "REJECT"].includes(action)) {
+    return NextResponse.json({ error: "A valid approval action is required." }, { status: 400 });
+  }
+
+  if (creditTransactionId) {
+    const creditTransaction = await prisma.creditTransaction.findUnique({ where: { id: creditTransactionId } });
+    if (!creditTransaction || !creditTransaction.providerReference?.startsWith("manual_")) {
+      return NextResponse.json({ error: "Manual credit purchase not found." }, { status: 404 });
+    }
+    if (creditTransaction.status !== "PENDING") {
+      return NextResponse.json({ error: "This credit purchase has already been reviewed." }, { status: 409 });
+    }
+
+    if (action === "REJECT") {
+      const rejected = await prisma.creditTransaction.updateMany({
+        where: { id: creditTransactionId, status: "PENDING" },
+        data: { status: "REJECTED" },
+      });
+      if (!rejected.count) return NextResponse.json({ error: "This credit purchase has already been reviewed." }, { status: 409 });
+      await writeSecurityAudit(request, { action: "CREDIT_PURCHASE_REJECTED", actorUserId: userId, targetUserId: creditTransaction.userId });
+      return NextResponse.json({ message: "Credit purchase rejected." });
+    }
+
+    const approved = await prisma.$transaction(async (transaction) => {
+      const pending = await transaction.creditTransaction.updateMany({
+        where: { id: creditTransactionId, status: "PENDING" },
+        data: { status: "COMPLETED" },
+      });
+      if (pending.count !== 1) return false;
+
+      await transaction.creditWallet.upsert({
+        where: { userId: creditTransaction.userId },
+        update: { balance: { increment: creditTransaction.credits } },
+        create: { userId: creditTransaction.userId, balance: creditTransaction.credits },
+      });
+      return true;
+    });
+
+    if (!approved) return NextResponse.json({ error: "This credit purchase has already been reviewed." }, { status: 409 });
+    await writeSecurityAudit(request, { action: "CREDIT_PURCHASE_APPROVED", actorUserId: userId, targetUserId: creditTransaction.userId, metadata: { credits: creditTransaction.credits, amountCents: creditTransaction.amountCents } });
+    return NextResponse.json({ message: `${creditTransaction.credits} credits added to the member's wallet.` });
+  }
+
+  if (!paymentId) {
+    return NextResponse.json({ error: "A payment or credit transaction ID is required." }, { status: 400 });
   }
 
   const payment = await prisma.payment.findUnique({

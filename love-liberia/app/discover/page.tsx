@@ -3,6 +3,7 @@ import Image from "next/image";
 import OnlineStatus from "@/components/OnlineStatus";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import SafetyActions from "@/app/api/likes/components/SafetyActions";
+import { FREE_DAILY_LIKE_LIMIT } from "@/lib/billing/plan-config";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
@@ -56,8 +57,9 @@ export default function DiscoverPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [dailyLikesRemaining, setDailyLikesRemaining] = useState(50);
-  const [superLikesRemaining, setSuperLikesRemaining] = useState(5);
+  const [dailyLikesRemaining, setDailyLikesRemaining] = useState<number | null>(FREE_DAILY_LIKE_LIMIT);
+  const [superLikesRemaining, setSuperLikesRemaining] = useState<number | null>(5);
+  const [canSeeWhoLikedYou, setCanSeeWhoLikedYou] = useState(false);
   const [history, setHistory] = useState<User[]>([]);
   const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
   const [activeSection, setActiveSection] = useState("recommendedForYou");
@@ -141,8 +143,9 @@ export default function DiscoverPage() {
       setUsers((current) => append ? [...current, ...nextUsers.filter((nextUser: User) => !current.some((currentUser) => currentUser.id === nextUser.id))] : nextUsers);
       setPage(data.page || requestedPage);
       setHasMore(Boolean(data.hasMore));
-      setDailyLikesRemaining(data.dailyLikesRemaining ?? 50);
-      setSuperLikesRemaining(data.superLikesRemaining ?? 5);
+      setDailyLikesRemaining(typeof data.dailyLikesRemaining === "number" ? data.dailyLikesRemaining : null);
+      setSuperLikesRemaining(typeof data.superLikesRemaining === "number" ? data.superLikesRemaining : null);
+      setCanSeeWhoLikedYou(data.canSeeWhoLikedYou === true);
     } catch {
       setError("Something went wrong.");
     } finally {
@@ -223,8 +226,8 @@ export default function DiscoverPage() {
         setUsers((previous) => previous.filter((user) => user.id !== userId));
         setSwipeAnimation("");
       }, 280);
-      if (action === "like") setDailyLikesRemaining((remaining) => remaining - 1);
-      if (action === "super") setSuperLikesRemaining((remaining) => remaining - 1);
+      if (action === "like") setDailyLikesRemaining((remaining) => remaining === null ? null : Math.max(0, remaining - 1));
+      if (action === "super") setSuperLikesRemaining((remaining) => remaining === null ? null : Math.max(0, remaining - 1));
 
       if (data.matched) {
         setMatchCelebration(data.matchProfiles);
@@ -239,7 +242,12 @@ export default function DiscoverPage() {
   async function undoLastAction() {
     const previous = history[history.length - 1];
     if (!previous) return;
-    await fetch(`/api/likes?receiverId=${encodeURIComponent(previous.id)}`, { method: "DELETE" });
+    const response = await fetch(`/api/likes?receiverId=${encodeURIComponent(previous.id)}`, { method: "DELETE" });
+    if (!response.ok) {
+      const data = await response.json();
+      setToast(data.error || "Unable to rewind this action.");
+      return;
+    }
     setHistory((current) => current.slice(0, -1));
     setUsers((current) => [previous, ...current]);
   }
@@ -286,10 +294,10 @@ export default function DiscoverPage() {
           </button>
         </div>
         <div className="mx-auto flex max-w-6xl gap-2 px-4 pb-3 text-xs font-semibold text-gray-500">
-          <span>{dailyLikesRemaining} likes left</span><span>•</span><span>{superLikesRemaining} Super Likes left</span>
+          <span>{dailyLikesRemaining === null ? "Unlimited likes" : `${dailyLikesRemaining} likes left`}</span><span>•</span><span>{superLikesRemaining === null ? "Unlimited Super Likes" : `${superLikesRemaining} Super Likes left`}</span>
         </div>
         <div className="mx-auto flex max-w-6xl gap-2 overflow-x-auto px-4 pb-4">
-          {discoverySections.map(([key, label]) => <button key={key} type="button" onClick={() => setActiveSection(key)} className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold ${activeSection === key ? "bg-pink-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>{label}</button>)}
+          {discoverySections.filter(([key]) => key !== "peopleWhoLikedYou" || canSeeWhoLikedYou).map(([key, label]) => <button key={key} type="button" onClick={() => setActiveSection(key)} className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold ${activeSection === key ? "bg-pink-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>{label}</button>)}
         </div>
       </header>
 
@@ -549,7 +557,7 @@ export default function DiscoverPage() {
 
         <div className="mb-5 hidden items-center justify-between rounded-xl bg-white p-3 shadow-sm sm:flex">
           <span className="text-sm text-gray-600">Smart recommendations ranked by compatibility</span>
-          <button type="button" onClick={() => void undoLastAction()} disabled={history.length === 0} className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold text-gray-700 disabled:opacity-40"><RotateCcw size={16} />Undo / Rewind</button>
+          <button type="button" onClick={() => void undoLastAction()} disabled={history.length === 0} title="Rewind costs 1 credit" className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold text-gray-700 disabled:opacity-40"><RotateCcw size={16} />Undo / Rewind</button>
         </div>
 
         <div className="relative mx-auto mb-6 h-147.5 max-w-md sm:hidden">
@@ -560,7 +568,7 @@ export default function DiscoverPage() {
             </article>
           ))}
         </div>
-        <div className="mb-6 flex justify-center gap-3 sm:hidden"><button type="button" onClick={() => { if (!users[0]) return; setSwipeAnimation("pass"); window.setTimeout(() => { setUsers((current) => current.slice(1)); setSwipeAnimation(""); }, 280); }} className="rounded-full border-2 border-gray-300 bg-white px-5 py-3 text-sm font-bold text-gray-600 transition hover:-translate-y-0.5">Pass</button><button type="button" onClick={() => void undoLastAction()} disabled={!history.length} className="rounded-full border-2 border-gray-300 bg-white p-3 text-gray-600 transition hover:rotate-[-20deg] disabled:opacity-40"><RotateCcw size={18} /></button><button type="button" onClick={() => users[0] && void handleAction(users[0].id, "like")} className="rounded-full bg-pink-600 px-5 py-3 text-sm font-bold text-white transition hover:scale-105"><Heart size={18} /></button><button type="button" onClick={() => users[0] && void handleAction(users[0].id, "super")} className="rounded-full bg-amber-400 px-5 py-3 text-sm font-bold text-white transition hover:scale-105"><Star size={18} /></button></div>
+        <div className="mb-6 flex justify-center gap-3 sm:hidden"><button type="button" onClick={() => { if (!users[0]) return; setSwipeAnimation("pass"); window.setTimeout(() => { setUsers((current) => current.slice(1)); setSwipeAnimation(""); }, 280); }} className="rounded-full border-2 border-gray-300 bg-white px-5 py-3 text-sm font-bold text-gray-600 transition hover:-translate-y-0.5">Pass</button><button type="button" onClick={() => void undoLastAction()} disabled={!history.length} title="Rewind costs 1 credit" className="rounded-full border-2 border-gray-300 bg-white p-3 text-gray-600 transition hover:rotate-[-20deg] disabled:opacity-40"><RotateCcw size={18} /></button><button type="button" onClick={() => users[0] && void handleAction(users[0].id, "like")} className="rounded-full bg-pink-600 px-5 py-3 text-sm font-bold text-white transition hover:scale-105"><Heart size={18} /></button><button type="button" onClick={() => users[0] && void handleAction(users[0].id, "super")} className="rounded-full bg-amber-400 px-5 py-3 text-sm font-bold text-white transition hover:scale-105"><Star size={18} /></button></div>
 
         <div className="hidden gap-6 sm:grid sm:grid-cols-2 lg:grid-cols-3">
           {users.map((user) => (

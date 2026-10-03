@@ -5,6 +5,7 @@ import type { MembershipPlan } from "@/lib/billing/types";
 import { publicUrl } from "@/lib/security/request";
 import { prisma } from "@/lib/prisma";
 import { verifyAuthToken } from "@/lib/auth";
+import { MEMBERSHIP_PRICES } from "@/lib/billing/plans";
 
 export async function POST(request: Request) {
   const token = (await cookies()).get("love_liberia_token")?.value;
@@ -16,6 +17,7 @@ export async function POST(request: Request) {
     const { plan, paymentMethod, bankName, bankAccountName, bankAccountNumber, mobileProvider, mobileAccountName, mobileNumber } = payload;
 
     if (plan !== "PREMIUM" && plan !== "VIP") return NextResponse.json({ error: "Choose a paid membership plan." }, { status: 400 });
+    const paidPlan = plan as "PREMIUM" | "VIP";
 
     if (paymentMethod === "BANK_TRANSFER") {
       if (!bankName || !bankAccountName || !bankAccountNumber) {
@@ -36,7 +38,7 @@ export async function POST(request: Request) {
         data: {
           userId,
           subscriptionId: subscription.id,
-          amountCents: 999,
+          amountCents: MEMBERSHIP_PRICES[paidPlan],
           currency: "USD",
           status: "PENDING",
           provider: "BANK_TRANSFER",
@@ -70,7 +72,7 @@ export async function POST(request: Request) {
         data: {
           userId,
           subscriptionId: subscription.id,
-          amountCents: 999,
+          amountCents: MEMBERSHIP_PRICES[paidPlan],
           currency: "USD",
           status: "PENDING",
           provider: "MOBILE_MONEY",

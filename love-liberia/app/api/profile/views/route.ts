@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyAuthToken } from "@/lib/auth";
+import { hasActivePaidMembership } from "@/lib/billing/plans";
 
 async function getUserId() {
   const token = (await cookies()).get("love_liberia_token")?.value;
@@ -18,8 +19,7 @@ function ageFrom(dateOfBirth: Date) {
 export async function GET() {
   const userId = await getUserId();
   if (!userId) return NextResponse.json({ error: "You must be logged in." }, { status: 401 });
-  const owner = await prisma.user.findUnique({ where: { id: userId }, select: { membershipPlan: true } });
-  if (!owner || !["PREMIUM", "VIP"].includes(owner.membershipPlan)) return NextResponse.json({ error: "Who Viewed Me is available with Premium or VIP membership." }, { status: 403 });
+  if (!(await hasActivePaidMembership(userId))) return NextResponse.json({ error: "Who Viewed Me is available with an active Premium or VIP membership." }, { status: 403 });
 
   const views = await prisma.profileView.findMany({ where: { viewedUserId: userId }, orderBy: { createdAt: "desc" }, take: 100 });
   const viewerIds = [...new Set(views.map((view) => view.viewerId))];

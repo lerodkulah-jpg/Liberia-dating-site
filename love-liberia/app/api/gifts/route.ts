@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyAuthToken } from "@/lib/auth";
 import { giftCatalog, type GiftType } from "@/lib/gifts/catalog";
+import { spendWalletCredits } from "@/lib/wallet/spend";
+import { sameOrigin } from "@/lib/security/request";
 
 async function getUserId() {
   const token = (await cookies()).get("love_liberia_token")?.value;
@@ -17,6 +19,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  if (!sameOrigin(request)) return NextResponse.json({ error: "Invalid request origin." }, { status: 403 });
   const senderId = await getUserId();
   if (!senderId) return NextResponse.json({ error: "You must be logged in." }, { status: 401 });
 
@@ -33,10 +36,9 @@ export async function POST(request: Request) {
     const key = giftType as GiftType;
     const gift = giftCatalog[key];
     const result = await prisma.$transaction(async (transaction) => {
-      const debit = await transaction.creditWallet.updateMany({ where: { userId: senderId, balance: { gte: gift.credits } }, data: { balance: { decrement: gift.credits } } });
-      if (debit.count !== 1) return null;
+      const spent = await spendWalletCredits(transaction, senderId, gift.credits, `GIFT_${key}`);
+      if (!spent) return null;
       const sentGift = await transaction.virtualGift.create({ data: { senderId, receiverId, giftType: key, credits: gift.credits } });
-      await transaction.creditTransaction.create({ data: { userId: senderId, type: `GIFT_${key}`, credits: -gift.credits, amountCents: 0, status: "COMPLETED" } });
       return sentGift;
     });
     if (!result) return NextResponse.json({ error: "Not enough credits. Purchase more credits in your wallet." }, { status: 402 });

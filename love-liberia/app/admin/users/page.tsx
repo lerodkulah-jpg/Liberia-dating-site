@@ -12,7 +12,8 @@ type User = {
   role: string;
   isActive: boolean;
   isBanned: boolean;
-  verified: boolean;
+  photoVerified: boolean;
+  photoVerificationStatus: string;
   membershipPlan: string;
   createdAt: string;
   reportCount: number;
@@ -43,7 +44,6 @@ export default function AdminUsersPage() {
   const [currentAdminId, setCurrentAdminId] = useState("");
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState("");
-  const [verifyingId, setVerifyingId] = useState("");
   const [expandedReportUserId, setExpandedReportUserId] = useState("");
   const [expandedPhotoUserId, setExpandedPhotoUserId] = useState("");
   const [deletingPhotoId, setDeletingPhotoId] = useState("");
@@ -92,38 +92,6 @@ export default function AdminUsersPage() {
       if (data.deleted) { setUsers((current) => current.filter((item) => item.id !== user.id)); return; }
       setUsers((current) => current.map((item) => item.id === user.id ? { ...item, ...data.user } : item));
     } catch { setError("Unable to update account."); } finally { setUpdatingId(""); }
-  }
-
-  async function updateVerification(user: User) {
-    setVerifyingId(user.id);
-    setError("");
-
-    try {
-      const response = await fetch("/api/admin/users", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id, verified: !user.verified }),
-      });
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error || "Unable to update verification status.");
-        return;
-      }
-
-      setUsers((currentUsers) =>
-        currentUsers.map((currentUser) =>
-          currentUser.id === user.id
-            ? { ...currentUser, verified: data.user.verified }
-            : currentUser
-        )
-      );
-    } catch (updateError) {
-      console.error("Update verification status error:", updateError);
-      setError("Unable to update verification status.");
-    } finally {
-      setVerifyingId("");
-    }
   }
 
   async function removePhoto(user: User, photoId: string) {
@@ -239,8 +207,8 @@ export default function AdminUsersPage() {
                         <td className="px-6 py-4">
                           <p className="font-bold text-slate-900">
                             {user.firstName}
-                            {user.verified && (
-                              <span className="ml-2 text-emerald-600">Verified</span>
+                            {user.photoVerified && (
+                              <span className="ml-2 text-emerald-700">Photo verified</span>
                             )}
                           </p>
                           <p className="text-slate-500">
@@ -264,22 +232,10 @@ export default function AdminUsersPage() {
                           </span>
                         </td>
                         <td className="px-6 py-4">
-                          <button
-                            type="button"
-                            disabled={verifyingId === user.id}
-                            onClick={() => void updateVerification(user)}
-                            className={`rounded-lg px-3 py-2 text-xs font-bold disabled:cursor-not-allowed disabled:opacity-50 ${
-                              user.verified
-                                ? "border border-slate-300 text-slate-700 hover:bg-slate-50"
-                                : "bg-emerald-600 text-white hover:bg-emerald-700"
-                            }`}
-                          >
-                            {verifyingId === user.id
-                              ? "Updating..."
-                              : user.verified
-                                ? "Unverify"
-                                : "Verify"}
-                          </button>
+                          <span className={`text-xs font-semibold ${user.photoVerificationStatus === "PENDING" ? "text-amber-700" : user.photoVerified ? "text-emerald-700" : "text-slate-500"}`}>
+                            {user.photoVerificationStatus.replace(/_/g, " ")}
+                          </span>
+                          {user.photoVerificationStatus === "PENDING" && <Link href="/admin/verifications" className="font-bold text-rose-700 hover:underline">Review selfie</Link>}
                         </td>
                         <td className="px-6 py-4">
                           <button

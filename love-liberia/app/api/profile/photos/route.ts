@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyAuthToken } from "@/lib/auth";
 import { hasImageSignature, rateLimit, sameOrigin, writeSecurityAudit } from "@/lib/security/request";
+import { invalidatePhotoVerification } from "@/lib/profile-verification";
 
 const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 const maxPhotos = 10;
@@ -55,19 +56,27 @@ export async function POST(request: Request) {
     const uploadDirectory = path.join(process.cwd(), "public", "uploads", "profiles");
     await fs.mkdir(uploadDirectory, { recursive: true });
 
-    const photos = [];
+    const uploadedPhotos: { url: string; filePath: string }[] = [];
     for (const [index, file] of files.entries()) {
       const extension = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
       const filename = `${userId}-${Date.now()}-${index}.${extension}`;
       const filePath = path.join(uploadDirectory, filename);
       await fs.writeFile(filePath, Buffer.from(await file.arrayBuffer()));
       createdFilePaths.push(filePath);
-
-      photos.push(await prisma.profilePhoto.create({
-        data: { userId, url: `/uploads/profiles/${filename}` },
-        select: { id: true, url: true, createdAt: true },
-      }));
+      uploadedPhotos.push({ url: `/uploads/profiles/${filename}`, filePath });
     }
+
+    const photos = await prisma.$transaction(async (transaction) => {
+      const createdPhotos = [];
+      for (const photo of uploadedPhotos) {
+        createdPhotos.push(await transaction.profilePhoto.create({
+          data: { userId, url: photo.url },
+          select: { id: true, url: true, createdAt: true },
+        }));
+      }
+      await invalidatePhotoVerification(transaction, userId);
+      return createdPhotos;
+    });
 
     await writeSecurityAudit(request, { action: "GALLERY_PHOTOS_UPLOADED", actorUserId: userId, metadata: { count: photos.length } });
 
@@ -95,10 +104,11 @@ export async function DELETE(request: Request) {
       select: { profileImage: true },
     });
 
-    await prisma.profilePhoto.delete({ where: { id: photo.id } });
-    if (user?.profileImage === photo.url) {
-      await prisma.user.update({ where: { id: userId }, data: { profileImage: null } });
-    }
+    await prisma.$transaction(async (transaction) => {
+      await transaction.profilePhoto.delete({ where: { id: photo.id } });
+      if (user?.profileImage === photo.url) await transaction.user.update({ where: { id: userId }, data: { profileImage: null } });
+      await invalidatePhotoVerification(transaction, userId);
+    });
     const filePath = path.join(process.cwd(), "public", photo.url.replace(/^\//, ""));
     await fs.unlink(filePath).catch(() => undefined);
 
@@ -122,9 +132,9 @@ export async function PATCH(request: Request) {
     const photo = await prisma.profilePhoto.findFirst({ where: { id: photoId, userId } });
     if (!photo) return NextResponse.json({ error: "Photo not found." }, { status: 404 });
 
-    await prisma.user.update({
-      where: { id: userId },
-      data: { profileImage: photo.url },
+    await prisma.$transaction(async (transaction) => {
+      await transaction.user.update({ where: { id: userId }, data: { profileImage: photo.url } });
+      await invalidatePhotoVerification(transaction, userId);
     });
 
     return NextResponse.json({ profileImage: photo.url });

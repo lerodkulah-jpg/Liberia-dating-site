@@ -11,7 +11,7 @@ export async function GET() {
 
     const sentLikes = await prisma.like.findMany({
       where: { senderId: userId },
-      include: { receiver: { select: { id: true, firstName: true, username: true, dateOfBirth: true, county: true, city: true, profileImage: true, verified: true, isOnline: true } } },
+      include: { receiver: { select: { id: true, firstName: true, username: true, dateOfBirth: true, county: true, city: true, profileImage: true, photoVerified: true, isOnline: true } } },
     });
     const receivedLikes = await prisma.like.findMany({ where: { receiverId: userId }, select: { senderId: true } });
     const receivedIds = new Set(receivedLikes.map((like) => like.senderId));
@@ -21,7 +21,7 @@ export async function GET() {
       const birthDate = new Date(person.dateOfBirth);
       let age = today.getFullYear() - birthDate.getFullYear();
       if (today.getMonth() < birthDate.getMonth() || (today.getMonth() === birthDate.getMonth() && today.getDate() < birthDate.getDate())) age--;
-      return { ...person, age };
+      return { ...person, verified: person.photoVerified, age };
     });
 
     return NextResponse.json({ matches });

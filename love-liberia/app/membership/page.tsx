@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Check, Crown, Heart, Loader2, Sparkles, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
+import { MEMBERSHIP_PRICES } from "@/lib/billing/plan-config";
 
 const plans = [
   {
@@ -17,7 +18,7 @@ const plans = [
   {
     id: "PREMIUM",
     name: "Premium",
-    price: "$9.99 / month",
+    price: `$${(MEMBERSHIP_PRICES.PREMIUM / 100).toFixed(2)} / month`,
     description: "More control, more discovery, more chances to connect.",
     icon: Sparkles,
     featured: true,
@@ -26,7 +27,7 @@ const plans = [
   {
     id: "VIP",
     name: "VIP",
-    price: "$19.99 / month",
+    price: `$${(MEMBERSHIP_PRICES.VIP / 100).toFixed(2)} / month`,
     description: "The most visible and supported Love Liberia experience.",
     icon: Crown,
     featured: false,

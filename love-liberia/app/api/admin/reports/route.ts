@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { verifyAuthToken } from "@/lib/auth";
 import { can } from "@/lib/admin/permissions";
+import { invalidatePhotoVerification } from "@/lib/profile-verification";
 
 async function getAdminUser() {
   const cookieStore = await cookies();
@@ -127,7 +128,10 @@ export async function PATCH(request: Request) {
     const report = await prisma.$transaction(async (transaction) => {
       if (action === "SUSPEND") await transaction.user.update({ where: { id: existing.reportedId }, data: { isActive: false } });
       if (action === "BAN") await transaction.user.update({ where: { id: existing.reportedId }, data: { isActive: false, isBanned: true } });
-      if (action === "REMOVE_CONTENT") await transaction.user.update({ where: { id: existing.reportedId }, data: { profileImage: null, bio: null } });
+      if (action === "REMOVE_CONTENT") {
+        await transaction.user.update({ where: { id: existing.reportedId }, data: { profileImage: null, bio: null } });
+        await invalidatePhotoVerification(transaction, existing.reportedId);
+      }
       const updated = await transaction.report.update({ where: { id: reportId }, data: { status, action }, select: { id: true, status: true, action: true, details: true } });
       await transaction.moderationAudit.create({ data: { reportId, moderatorId: admin.id, targetUserId: existing.reportedId, action, notes: typeof notes === "string" ? notes.trim().slice(0, 2000) : null } });
       return updated;

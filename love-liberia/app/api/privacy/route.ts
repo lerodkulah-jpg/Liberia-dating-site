@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyAuthToken } from "@/lib/auth";
+import { hasActivePaidMembership } from "@/lib/billing/plans";
 
 const privacyFields = ["hideOnlineStatus", "hideLastActive", "incognitoMode", "profileViewTracking"] as const;
 
@@ -26,6 +27,9 @@ export async function PATCH(request: Request) {
   if (!userId) return NextResponse.json({ error: "You must be logged in." }, { status: 401 });
 
   const body = await request.json();
+  if (body.incognitoMode === true) {
+    if (!(await hasActivePaidMembership(userId))) return NextResponse.json({ error: "Incognito mode requires an active Premium or VIP membership." }, { status: 403 });
+  }
   const data: Record<string, boolean | string> = {};
   for (const field of privacyFields) if (typeof body[field] === "boolean") data[field] = body[field];
   if (body.messagePermission === "EVERYONE" || body.messagePermission === "MATCHES") data.messagePermission = body.messagePermission;

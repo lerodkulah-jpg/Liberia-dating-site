@@ -32,7 +32,18 @@ export async function PATCH(request: Request) {
   const body = await request.json();
   // Members may cancel their own subscription, but only an admin can reactivate one,
   // otherwise a cancelled plan could be revived without payment.
-  if (body.status !== "CANCELLED" && !isAdminRole(user.role)) return NextResponse.json({ error: "Only an admin can reactivate a subscription." }, { status: 403 });
-  const subscription = await prisma.subscription.updateMany({ where: { id: body.subscriptionId, userId: user.id }, data: { status: body.status === "CANCELLED" ? "CANCELLED" : "ACTIVE" } });
-  return subscription.count ? NextResponse.json({ success: true }) : NextResponse.json({ error: "Subscription not found." }, { status: 404 });
+  if (body.status !== "CANCELLED" && body.status !== "ACTIVE") return NextResponse.json({ error: "Choose a valid subscription status." }, { status: 400 });
+  if (body.status === "ACTIVE" && !isAdminRole(user.role)) return NextResponse.json({ error: "Only an admin can reactivate a subscription." }, { status: 403 });
+
+  const existing = await prisma.subscription.findFirst({ where: { id: body.subscriptionId, userId: user.id }, select: { plan: true } });
+  if (!existing) return NextResponse.json({ error: "Subscription not found." }, { status: 404 });
+
+  await prisma.$transaction(async (transaction) => {
+    await transaction.subscription.update({ where: { id: body.subscriptionId }, data: { status: body.status } });
+    await transaction.user.updateMany({
+      where: { id: user.id, membershipPlan: existing.plan },
+      data: { membershipStatus: body.status },
+    });
+  });
+  return NextResponse.json({ success: true });
 }

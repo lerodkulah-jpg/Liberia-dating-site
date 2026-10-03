@@ -72,7 +72,7 @@ export default async function DashboardPage() {
         </div>
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <h1 className="text-3xl font-bold text-white">{user.firstName}</h1>
-          {user.verified && <VerifiedBadge compact />}
+          {user.photoVerified && <VerifiedBadge compact />}
         </div>
         <p className="mt-2 text-gray-300">Find meaningful connections in Liberia.</p>
 

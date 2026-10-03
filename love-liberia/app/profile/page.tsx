@@ -55,7 +55,7 @@ export default async function ProfilePage() {
   const profilePhotos = user.profilePhotos ?? [];
   const age = getAge(user.dateOfBirth);
   const location = [user.city, user.county, user.country].filter(Boolean).join(", ");
-  const trustVerified = user.verified || user.emailVerified || user.phoneVerified || user.photoVerified;
+  const trustVerified = user.photoVerified;
 
   return (
     <main className="min-h-screen bg-gray-950 text-white">

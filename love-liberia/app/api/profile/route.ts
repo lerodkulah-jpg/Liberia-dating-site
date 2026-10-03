@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyAuthToken } from "@/lib/auth";
 import { rateLimit, sameOrigin, validateText, writeSecurityAudit } from "@/lib/security/request";
+import { hasActivePaidMembership } from "@/lib/billing/plans";
 
 async function getCurrentUserId() {
   const token = (await cookies()).get("love_liberia_token")?.value;
@@ -79,6 +80,9 @@ export async function PUT(request: Request) {
     const maximumAge = Number(maxAge);
     if (!Number.isInteger(minimumAge) || !Number.isInteger(maximumAge) || minimumAge < 18 || maximumAge < minimumAge || maximumAge > 100) {
       return NextResponse.json({ error: "Please enter a valid age range." }, { status: 400 });
+    }
+    if (incognitoMode === true) {
+      if (!(await hasActivePaidMembership(userId))) return NextResponse.json({ error: "Incognito mode requires an active Premium or VIP membership." }, { status: 403 });
     }
 
     const user = await prisma.user.update({

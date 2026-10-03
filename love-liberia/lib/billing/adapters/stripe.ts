@@ -11,6 +11,7 @@ import {
   isLivePaymentConfigured,
 } from "@/lib/payments/account";
 import { creditProducts, type CreditProduct } from "@/lib/wallet/catalog";
+import { MEMBERSHIP_PRICES } from "@/lib/billing/plans";
 
 /**
  * Live billing adapter backed by Stripe Checkout.
@@ -25,12 +26,6 @@ import { creditProducts, type CreditProduct } from "@/lib/wallet/catalog";
  */
 
 const STRIPE_API = "https://api.stripe.com/v1";
-
-/** Monthly membership prices, in the smallest currency unit (cents). */
-const PLAN_PRICES: Record<"PREMIUM" | "VIP", number> = {
-  PREMIUM: 999,
-  VIP: 1999,
-};
 
 async function stripeRequest(path: string, params: Record<string, string>) {
   const secret = getSecretKey();
@@ -76,7 +71,7 @@ export class StripeBillingAdapter implements BillingAdapter {
       "line_items[0][quantity]": "1",
       "line_items[0][price_data][currency]": account.currency.toLowerCase(),
       "line_items[0][price_data][unit_amount]": String(
-        PLAN_PRICES[request.plan],
+        MEMBERSHIP_PRICES[request.plan],
       ),
       "line_items[0][price_data][product_data][name]": `Love Liberia ${request.plan} membership`,
       // Our own reference, echoed back on the webhook so we can match the payment.

@@ -11,10 +11,10 @@ export default function VerifiedBadge({ compact = false, className = "" }: Verif
       className={`inline-flex items-center gap-1 rounded-full bg-sky-100 font-semibold text-sky-700 ${
         compact ? "px-2 py-0.5 text-xs" : "px-3 py-1 text-sm"
       } ${className}`}
-      title="Verified profile"
+      title="Photo compared with profile pictures by a Love Liberia reviewer"
     >
       <BadgeCheck className={compact ? "h-3.5 w-3.5" : "h-4 w-4"} />
-      ✓ Verified
+      ✓ Photo verified
     </span>
   );
 }

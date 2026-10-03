@@ -213,6 +213,8 @@ model Message {
 	conversationId String?
 
 	content String
+	imageData Bytes?
+	imageMimeType String?
 	read    Boolean @default(false)
 
 	createdAt DateTime @default(now())
@@ -664,6 +666,8 @@ model Verification {
 	type String
 	status String @default("PENDING")
 	providerReference String?
+	photoData Bytes?
+	photoMimeType String?
 	verifiedAt DateTime?
 	createdAt DateTime @default(now())
 	updatedAt DateTime @updatedAt

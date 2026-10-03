@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyAuthToken } from "@/lib/auth";
+import { invalidatePhotoVerification } from "@/lib/profile-verification";
 
 async function isAdmin() {
   const token = (await cookies()).get("love_liberia_token")?.value;
@@ -53,9 +54,9 @@ export async function DELETE(
         return NextResponse.json({ error: "User not found." }, { status: 404 });
       }
 
-      await prisma.user.update({
-        where: { id: userId },
-        data: { profileImage: null },
+      await prisma.$transaction(async (transaction) => {
+        await transaction.user.update({ where: { id: userId }, data: { profileImage: null } });
+        await invalidatePhotoVerification(transaction, userId);
       });
 
       if (user.profileImage) {
@@ -75,7 +76,10 @@ export async function DELETE(
       return NextResponse.json({ error: "Photo not found." }, { status: 404 });
     }
 
-    await prisma.profilePhoto.delete({ where: { id: photo.id } });
+    await prisma.$transaction(async (transaction) => {
+      await transaction.profilePhoto.delete({ where: { id: photo.id } });
+      await invalidatePhotoVerification(transaction, userId);
+    });
     await fs
       .unlink(path.join(process.cwd(), "public", photo.url.replace(/^\//, "")))
       .catch(() => undefined);

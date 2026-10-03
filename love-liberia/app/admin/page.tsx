@@ -65,7 +65,7 @@ export default async function AdminDashboardPage() {
   ] = await Promise.all([
       prisma.user.count(),
       prisma.user.count({ where: { isActive: true } }),
-      prisma.user.count({ where: { verified: true } }),
+      prisma.user.count({ where: { photoVerified: true } }),
       prisma.report.count({ where: { status: "PENDING" } }),
       prisma.like.count(),
       prisma.block.count(),
@@ -115,9 +115,9 @@ export default async function AdminDashboardPage() {
       tone: "border-rose-500 text-rose-600",
     },
     {
-      label: "Verified users",
+      label: "Photo-verified profiles",
       value: verifiedUsers,
-      detail: "Profiles with verified status",
+      detail: "Selfies compared with profile photos",
       icon: BadgeCheck,
       tone: "border-emerald-500 text-emerald-600",
     },
@@ -188,6 +188,13 @@ export default async function AdminDashboardPage() {
             </h2>
           </div>
           <div className="flex flex-wrap items-center gap-3">
+            {can(admin.role, "verify_profiles") && <Link
+              href="/admin/verifications"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-800 hover:bg-emerald-100"
+            >
+              <BadgeCheck className="h-4 w-4" />
+              Review photo verification
+            </Link>}
             <Link
               href="/admin/risk"
               className="inline-flex items-center justify-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-800 hover:bg-amber-100"
@@ -263,7 +270,7 @@ export default async function AdminDashboardPage() {
               <BadgeCheck className="h-5 w-5 text-emerald-600" />
               <h3 className="mt-4 font-black">Verified users</h3>
               <p className="mt-2 text-sm text-slate-500">
-                {verifiedUsers.toLocaleString()} verified profiles are active.
+                {verifiedUsers.toLocaleString()} photo-verified profiles are active.
               </p>
             </div>
             <Link

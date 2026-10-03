@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyAuthToken } from "@/lib/auth";
 import { hasImageSignature, rateLimit, sameOrigin, writeSecurityAudit } from "@/lib/security/request";
+import { invalidatePhotoVerification } from "@/lib/profile-verification";
 
 export async function POST(request: Request) {
   try {
@@ -45,10 +46,14 @@ export async function POST(request: Request) {
     await fs.writeFile(filePath, Buffer.from(bytes));
 
     const imageUrl = `/uploads/profiles/${filename}`;
-    const user = await prisma.user.update({
-      where: { id: userId },
-      data: { profileImage: imageUrl },
-      select: { id: true, firstName: true, profileImage: true },
+    const user = await prisma.$transaction(async (transaction) => {
+      const updatedUser = await transaction.user.update({
+        where: { id: userId },
+        data: { profileImage: imageUrl },
+        select: { id: true, firstName: true, profileImage: true },
+      });
+      await invalidatePhotoVerification(transaction, userId);
+      return updatedUser;
     });
 
     await writeSecurityAudit(request, { action: "PROFILE_PHOTO_UPLOADED", actorUserId: userId });
@@ -78,9 +83,9 @@ export async function DELETE() {
       return NextResponse.json({ error: "No main profile photo found." }, { status: 404 });
     }
 
-    await prisma.user.update({
-      where: { id: userId },
-      data: { profileImage: null },
+    await prisma.$transaction(async (transaction) => {
+      await transaction.user.update({ where: { id: userId }, data: { profileImage: null } });
+      await invalidatePhotoVerification(transaction, userId);
     });
 
     await fs

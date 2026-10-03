@@ -52,10 +52,10 @@ export async function GET(request: Request) {
         role: true,
         isActive: true,
         isBanned: true,
-        verified: true,
         emailVerified: true,
         phoneVerified: true,
         photoVerified: true,
+        photoVerificationStatus: true,
         membershipPlan: true,
         createdAt: true,
         profileImage: true,
@@ -95,6 +95,7 @@ export async function GET(request: Request) {
       currentAdminRole: admin.role,
       users: users.map(({ _count, reportsReceived, profilePhotos, riskFlags, ...user }) => ({
         ...user,
+        verified: user.photoVerified,
         photos: [
           ...(user.profileImage
             ? [{ id: "profileImage", url: user.profileImage, isPrimary: true }]
@@ -128,9 +129,11 @@ export async function PATCH(request: Request) {
   try {
     const { userId, isActive, isBanned, verified, membershipPlan, action } = await request.json();
 
+    if (typeof verified === "boolean") return NextResponse.json({ error: "Photo verification can only be changed through the review queue." }, { status: 400 });
+
     if (
       typeof userId !== "string" ||
-      (typeof isActive !== "boolean" && typeof isBanned !== "boolean" && typeof verified !== "boolean" && typeof membershipPlan !== "string" && typeof action !== "string")
+      (typeof isActive !== "boolean" && typeof isBanned !== "boolean" && typeof membershipPlan !== "string" && typeof action !== "string")
     ) {
       return NextResponse.json(
         { error: "userId and a status value are required." },
@@ -167,7 +170,6 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ deleted: true, userId });
     }
 
-    if (typeof verified === "boolean" && !can(admin.role, "verify_profiles")) return NextResponse.json({ error: "You do not have permission to verify profiles." }, { status: 403 });
     if ((typeof isActive === "boolean" || typeof isBanned === "boolean" || action === "reset") && !can(admin.role, "manage_users")) return NextResponse.json({ error: "You do not have permission to manage accounts." }, { status: 403 });
     if (typeof membershipPlan === "string" && !can(admin.role, "manage_subscriptions")) return NextResponse.json({ error: "You do not have permission to manage subscriptions." }, { status: 403 });
     if (membershipPlan && !["FREE", "PREMIUM", "VIP"].includes(membershipPlan)) return NextResponse.json({ error: "Invalid membership plan." }, { status: 400 });
@@ -175,13 +177,12 @@ export async function PATCH(request: Request) {
     const user = await prisma.user.update({
       where: { id: userId },
       data: {
-        ...(action === "reset" ? { isActive: true, isBanned: false, verified: false, membershipPlan: "FREE", membershipStatus: "ACTIVE" } : {}),
+        ...(action === "reset" ? { isActive: true, isBanned: false, verified: false, photoVerified: false, photoVerificationStatus: "NOT_SUBMITTED", membershipPlan: "FREE", membershipStatus: "ACTIVE" } : {}),
         ...(typeof isActive === "boolean" ? { isActive } : {}),
         ...(typeof isBanned === "boolean" ? { isBanned, isActive: isBanned ? false : isActive ?? true } : {}),
-        ...(typeof verified === "boolean" ? { verified } : {}),
         ...(typeof membershipPlan === "string" ? { membershipPlan, membershipStatus: "ACTIVE" } : {}),
       },
-      select: { id: true, isActive: true, isBanned: true, verified: true, membershipPlan: true, membershipStatus: true },
+      select: { id: true, isActive: true, isBanned: true, photoVerified: true, photoVerificationStatus: true, membershipPlan: true, membershipStatus: true },
     });
 
     return NextResponse.json({ user });

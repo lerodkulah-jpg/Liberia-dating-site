@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyAuthToken } from "@/lib/auth";
 import { assessAccountRisk, evaluateMessageRisk } from "@/lib/security/risk-scoring";
+import { CHAT_PHOTO_MAX_BYTES, CHAT_PHOTO_TYPES } from "@/lib/chat-photo";
+import { hasImageSignature, sameOrigin } from "@/lib/security/request";
 
 async function getCurrentUserId() {
   const token = (await cookies()).get("love_liberia_token")?.value;
@@ -77,6 +79,15 @@ export async function GET(request: Request) {
         },
         orderBy: { createdAt: "desc" },
         take: limit + 1,
+        select: {
+          id: true,
+          senderId: true,
+          receiverId: true,
+          content: true,
+          imageMimeType: true,
+          read: true,
+          createdAt: true,
+        },
       }),
       prisma.user.findUnique({
         where: { id: otherUserId },
@@ -103,7 +114,12 @@ export async function GET(request: Request) {
       data: { read: true },
     });
 
-    return NextResponse.json({ currentUserId: userId, user, messages: visibleMessages, hasMore }, { headers: { "Cache-Control": "private, max-age=5, stale-while-revalidate=15" } });
+    const clientMessages = visibleMessages.map(({ imageMimeType, ...message }) => ({
+      ...message,
+      hasImage: Boolean(imageMimeType),
+    }));
+
+    return NextResponse.json({ currentUserId: userId, user, messages: clientMessages, hasMore }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
     console.error("Get messages error:", error);
     return NextResponse.json({ error: "Unable to load messages." }, { status: 500 });
@@ -112,12 +128,36 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    if (!sameOrigin(request)) {
+      return NextResponse.json({ error: "Invalid request origin." }, { status: 403 });
+    }
+
     const userId = await getCurrentUserId();
     if (!userId) {
       return NextResponse.json({ error: "You must be logged in." }, { status: 401 });
     }
 
-    const { receiverId, content } = await request.json();
+    let receiverId: string | null = null;
+    let content = "";
+    let photoFile: File | null = null;
+    if (request.headers.get("content-type")?.includes("multipart/form-data")) {
+      const formData = await request.formData();
+      const receiverValue = formData.get("receiverId");
+      const contentValue = formData.get("content");
+      const photoValue = formData.get("photo");
+      receiverId = typeof receiverValue === "string" ? receiverValue : null;
+      content = typeof contentValue === "string" ? contentValue : "";
+      if (photoValue instanceof File) photoFile = photoValue;
+    } else {
+      const body = await request.json();
+      receiverId = typeof body.receiverId === "string" ? body.receiverId : null;
+      content = typeof body.content === "string" ? body.content : "";
+    }
+
+    const trimmedContent = content.trim();
+    if (!receiverId || (!trimmedContent && !photoFile)) {
+      return NextResponse.json({ error: "Receiver and message or photo are required." }, { status: 400 });
+    }
 
     // Check whether either user has blocked the other
     const blockExists = await prisma.block.findFirst({
@@ -141,15 +181,6 @@ export async function POST(request: Request) {
           error: "You cannot message this user because a block is active.",
         },
         { status: 403 }
-      );
-    }
-
-    const trimmedContent = typeof content === "string" ? content.trim() : "";
-
-    if (!receiverId || !trimmedContent) {
-      return NextResponse.json(
-        { error: "Receiver and message are required." },
-        { status: 400 }
       );
     }
 
@@ -177,14 +208,39 @@ export async function POST(request: Request) {
       );
     }
 
+    let messageContent = trimmedContent;
+    let messageImageData: Uint8Array<ArrayBuffer> | null = null;
+    let messageImageMimeType: string | null = null;
+    if (photoFile) {
+      if (!CHAT_PHOTO_TYPES.has(photoFile.type)) {
+        return NextResponse.json({ error: "Choose a JPG, PNG, or WEBP photo." }, { status: 400 });
+      }
+      if (photoFile.size > CHAT_PHOTO_MAX_BYTES) {
+        return NextResponse.json({ error: "Chat photos must be smaller than 1 MB after compression." }, { status: 413 });
+      }
+
+      const photoBytes = new Uint8Array(await photoFile.arrayBuffer());
+      if (!hasImageSignature(photoBytes, photoFile.type)) {
+        return NextResponse.json({ error: "The uploaded file is not a valid image." }, { status: 400 });
+      }
+
+      messageImageData = photoBytes;
+      messageImageMimeType = photoFile.type;
+      if (!messageContent) messageContent = "Photo";
+    }
+
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
     const recentMessages = await prisma.message.findMany({
-      where: { senderId: userId, createdAt: { gte: oneHourAgo } },
+      where: {
+        senderId: userId,
+        createdAt: { gte: oneHourAgo },
+        imageMimeType: null,
+      },
       select: { content: true, receiverId: true },
     });
 
     const riskAssessment = evaluateMessageRisk({
-      content: trimmedContent,
+      content: trimmedContent || (photoFile ? "Shared a photo" : ""),
       recentMessageCount: recentMessages.length,
       recentUniqueRecipients: new Set(recentMessages.map((item) => item.receiverId)).size,
       repeatedMessages: recentMessages.filter((item) => item.content.toLowerCase() === trimmedContent.toLowerCase()).length,
@@ -205,10 +261,23 @@ export async function POST(request: Request) {
     }
 
     const message = await prisma.message.create({
-      data: { senderId: userId, receiverId, content: trimmedContent },
+      data: { senderId: userId, receiverId, content: messageContent, imageData: messageImageData, imageMimeType: messageImageMimeType },
+      select: {
+        id: true,
+        senderId: true,
+        receiverId: true,
+        content: true,
+        imageMimeType: true,
+        read: true,
+        createdAt: true,
+      },
     });
+    const { imageMimeType, ...clientMessage } = message;
 
-    return NextResponse.json({ message, risk: riskAssessment.requiresHumanReview ? assessAccountRisk(riskAssessment, "MESSAGE_ACTIVITY") : null }, { status: 201 });
+    return NextResponse.json({
+      message: { ...clientMessage, hasImage: Boolean(imageMimeType) },
+      risk: riskAssessment.requiresHumanReview ? assessAccountRisk(riskAssessment, "MESSAGE_ACTIVITY") : null,
+    }, { status: 201 });
   } catch (error) {
     console.error("Send message error:", error);
     return NextResponse.json({ error: "Unable to send message." }, { status: 500 });

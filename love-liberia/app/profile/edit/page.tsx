@@ -87,6 +87,7 @@ export default function EditProfilePage() {
   const [verificationCode, setVerificationCode] = useState("");
   const [verificationMessage, setVerificationMessage] = useState("");
   const [verificationLoading, setVerificationLoading] = useState(false);
+  const [photoVerificationChallenge, setPhotoVerificationChallenge] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -180,16 +181,36 @@ export default function EditProfilePage() {
     } catch { setVerificationMessage("Unable to confirm verification."); } finally { setVerificationLoading(false); }
   }
 
-  async function submitPhotoVerification(file: File) {
+  async function requestPhotoVerificationChallenge() {
+    setVerificationLoading(true);
+    setVerificationMessage("");
+    try {
+      const response = await fetch("/api/verification/photo", { cache: "no-store" });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Unable to create a selfie code.");
+      setPhotoVerificationChallenge(data.challenge);
+      setVerificationMessage("Write this code on paper and include it in a new, clear selfie.");
+    } catch (challengeError) {
+      setVerificationMessage(challengeError instanceof Error ? challengeError.message : "Unable to create a selfie code.");
+    } finally {
+      setVerificationLoading(false);
+    }
+  }
+
+  async function submitPhotoVerification(file: File, challenge: string) {
     setVerificationLoading(true);
     setVerificationMessage("");
     const body = new FormData();
     body.append("photo", file);
+    body.append("challenge", challenge);
     try {
       const response = await fetch("/api/verification/photo", { method: "POST", body });
       const data = await response.json();
       setVerificationMessage(data.message || data.error);
-      if (response.ok) setVerification((current) => current ? { ...current, photoVerificationStatus: "PENDING" } : current);
+      if (response.ok) {
+        setVerification((current) => current ? { ...current, photoVerified: false, photoVerificationStatus: "PENDING" } : current);
+        setPhotoVerificationChallenge("");
+      }
     } catch { setVerificationMessage("Unable to submit photo verification."); } finally { setVerificationLoading(false); }
   }
 
@@ -464,7 +485,7 @@ export default function EditProfilePage() {
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
               <div className="rounded-xl border border-gray-800 p-4"><p className="font-semibold">Email</p><p className="mt-1 text-sm text-gray-400">{verification.emailVerified ? "✓ Verified" : "Not verified"}</p>{!verification.emailVerified && <><button type="button" onClick={() => { setVerificationType("EMAIL"); void requestVerification(); }} disabled={verificationLoading} className="mt-3 rounded-lg bg-rose-500 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50">Send code</button></>}</div>
               <div className="rounded-xl border border-gray-800 p-4"><p className="font-semibold">Phone</p><p className="mt-1 text-sm text-gray-400">{verification.phoneVerified ? "✓ Verified" : verification.phone ? "Not verified" : "Add a phone number first"}</p>{!verification.phoneVerified && verification.phone && <><button type="button" onClick={() => { setVerificationType("PHONE"); void requestVerification(); }} disabled={verificationLoading} className="mt-3 rounded-lg bg-rose-500 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50">Send code</button></>}</div>
-              <div className="rounded-xl border border-gray-800 p-4"><p className="font-semibold">Photo</p><p className="mt-1 text-sm text-gray-400">{verification.photoVerified ? "✓ Verified" : verification.photoVerificationStatus === "PENDING" ? "Review pending" : "Not submitted"}</p>{!verification.photoVerified && verification.photoVerificationStatus !== "PENDING" && <label className="mt-3 inline-flex cursor-pointer rounded-lg bg-rose-500 px-3 py-2 text-sm font-semibold text-white">Submit photo<input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" disabled={verificationLoading} onChange={(event) => { const file = event.target.files?.[0]; if (file) void submitPhotoVerification(file); event.currentTarget.value = ""; }} /></label>}</div>
+              <div className="rounded-xl border border-gray-800 p-4"><p className="font-semibold">Photo check</p><p className="mt-1 text-sm text-gray-400">{verification.photoVerified ? "Photo reviewed" : verification.photoVerificationStatus === "PENDING" ? "Review pending" : verification.photoVerificationStatus === "REJECTED" ? "Not approved; you can submit a new selfie" : "Not submitted"}</p>{!verification.photoVerified && verification.photoVerificationStatus !== "PENDING" && <div className="mt-3"><p className="text-xs text-gray-400">A moderator compares your current selfie with your profile photos. The selfie stays private and is deleted after review.</p>{photoVerificationChallenge ? <><p className="mt-3 text-xs font-bold uppercase text-rose-300">Write this code on paper and include it in a new selfie</p><p className="mt-1 text-2xl font-black tracking-[0.3em] text-white">{photoVerificationChallenge}</p><div className="mt-3 flex flex-wrap gap-2"><label className="inline-flex cursor-pointer rounded-lg bg-rose-500 px-3 py-2 text-sm font-semibold text-white">Upload selfie<input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" disabled={verificationLoading} onChange={(event) => { const file = event.target.files?.[0]; if (file) void submitPhotoVerification(file, photoVerificationChallenge); event.currentTarget.value = ""; }} /></label><button type="button" onClick={() => void requestPhotoVerificationChallenge()} disabled={verificationLoading} className="rounded-lg border border-gray-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50">Get a new code</button></div></> : <button type="button" onClick={() => void requestPhotoVerificationChallenge()} disabled={verificationLoading} className="mt-3 rounded-lg bg-rose-500 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50">{verificationLoading ? "Preparing..." : "Get selfie code"}</button>}</div>}</div>
             </div>
             {!verification.emailVerified || !verification.phoneVerified ? <div className="mt-4 flex flex-wrap gap-2"><input value={verificationCode} onChange={(event) => setVerificationCode(event.target.value)} inputMode="numeric" maxLength={6} placeholder="6-digit code" className="min-h-11 rounded-lg border border-gray-700 bg-gray-950 px-3 text-white" /><button type="button" onClick={() => void confirmVerification()} disabled={verificationLoading || verificationCode.length !== 6} className="rounded-lg border border-gray-600 px-4 py-2 text-sm font-semibold disabled:opacity-50">Confirm {verificationType === "EMAIL" ? "email" : "phone"}</button></div> : null}
             {verificationMessage && <p className="mt-3 text-sm text-rose-300">{verificationMessage}</p>}

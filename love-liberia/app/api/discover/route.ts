@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyAuthToken } from "@/lib/auth";
+import { FREE_DAILY_LIKE_LIMIT, FREE_DAILY_SUPER_LIKE_LIMIT, hasActivePaidMembership } from "@/lib/billing/plans";
 
 export async function GET(request: Request) {
   try {
@@ -33,6 +34,8 @@ export async function GET(request: Request) {
       );
     }
 
+    const hasPaidAccess = await hasActivePaidMembership(userId);
+
     const searchParams = new URL(request.url).searchParams;
     const county = searchParams.get("county");
     const city = searchParams.get("city");
@@ -47,12 +50,12 @@ export async function GET(request: Request) {
       where: {
         id: { not: userId },
         isActive: true,
-        incognitoMode: false,
+        incognitoMode: hasPaidAccess,
         ...(county ? { county } : {}),
         ...(city ? { city: { contains: city } } : {}),
         ...(relationshipGoal ? { relationshipGoal } : {}),
         ...(online ? { isOnline: true } : {}),
-        ...(verified ? { verified: true } : {}),
+        ...(verified ? { photoVerified: true } : {}),
         blocksReceived: {
           none: { blockerId: userId },
         },
@@ -85,7 +88,7 @@ export async function GET(request: Request) {
           select: { id: true, url: true },
           orderBy: { createdAt: "asc" },
         },
-        verified: true,
+        photoVerified: true,
         isOnline: true,
         hideOnlineStatus: true,
         createdAt: true,
@@ -155,6 +158,7 @@ export async function GET(request: Request) {
           Math.round(activityLevel * 0.05);
         return {
           ...user,
+          verified: user.photoVerified,
           age,
           locationLabel: [user.county, user.country].filter(Boolean).join(", ") || "Liberia",
           mutualInterests,
@@ -162,7 +166,7 @@ export async function GET(request: Request) {
           activityLevel,
           isOnline: user.hideOnlineStatus ? false : user.isOnline,
           city: null,
-          likedCurrentUser: likedCurrentUser.has(user.id),
+          likedCurrentUser: hasPaidAccess && likedCurrentUser.has(user.id),
           interactedBefore: interactedWith.has(user.id),
         };
       })
@@ -182,12 +186,12 @@ export async function GET(request: Request) {
       newMembers: byNewest.slice(0, 8),
       mostCompatible: byScore.slice(0, 8),
       recentlyActive: byActivity.slice(0, 8),
-      peopleWhoLikedYou: profiles.filter((profile) => profile.likedCurrentUser).slice(0, 8),
+      peopleWhoLikedYou: hasPaidAccess ? profiles.filter((profile) => profile.likedCurrentUser).slice(0, 8) : [],
       recommendedForYou: byScore.filter((profile) => !profile.interactedBefore).slice(0, 8),
     };
     const usersForView = sort === "recommended" ? byScore : sort === "online" ? byActivity : profiles;
     return NextResponse.json(
-      { users: usersForView, sections, page, hasMore, dailyLikesRemaining: Math.max(0, 50 - dailyLikes), superLikesRemaining: Math.max(0, 5 - dailySuperLikes) },
+      { users: usersForView, sections, page, hasMore, canSeeWhoLikedYou: hasPaidAccess, dailyLikesRemaining: hasPaidAccess ? null : Math.max(0, FREE_DAILY_LIKE_LIMIT - dailyLikes), superLikesRemaining: hasPaidAccess ? null : Math.max(0, FREE_DAILY_SUPER_LIKE_LIMIT - dailySuperLikes) },
       { headers: { "Cache-Control": "private, max-age=15, stale-while-revalidate=30" } }
     );
   } catch (error) {

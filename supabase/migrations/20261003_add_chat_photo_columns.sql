@@ -1,0 +1,3 @@
+ALTER TABLE public."Message"
+  ADD COLUMN IF NOT EXISTS "imageData" BYTEA,
+  ADD COLUMN IF NOT EXISTS "imageMimeType" TEXT;
