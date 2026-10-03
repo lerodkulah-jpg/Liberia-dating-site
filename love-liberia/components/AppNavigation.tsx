@@ -46,7 +46,15 @@ export default function AppNavigation() {
   const pathname = usePathname();
   const hiddenRoutes = ["/", "/login", "/register", "/admin", "/privacy", "/terms", "/cookies", "/safety"];
 
-  if (hiddenRoutes.some((route) => pathname === route || pathname.startsWith(`${route}/`))) return null;
+  if (hiddenRoutes.some((route) => pathname === route || pathname.startsWith(`${route}/`))) {
+    if (pathname === "/") return null;
+
+    return (
+      <ThemeToggle
+        className="fixed bottom-6 right-4 z-[60] inline-flex h-11 w-11 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-700 shadow-lg transition hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
+      />
+    );
+  }
 
   return (
     <>

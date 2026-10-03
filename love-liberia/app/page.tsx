@@ -10,7 +10,6 @@ import {
   Sparkles,
   Star,
   Users,
-  UserRound,
   X,
 } from "lucide-react";
 import { useState } from "react";
@@ -183,27 +182,24 @@ export default function Home() {
           <div className="hero-background-image" aria-hidden="true" />
           <div className="absolute left-0 top-20 h-72 w-72 rounded-full bg-red-500/10 blur-3xl" />
           <div className="absolute right-0 top-40 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl" />
-          <div className="hero-people" aria-hidden="true">
-            <div className="floating-profile floating-profile-man">
-              <UserRound size={34} strokeWidth={1.7} />
-            </div>
-            <div className="floating-profile floating-profile-woman">
-              <UserRound size={34} strokeWidth={1.7} />
-            </div>
-            <Heart className="floating-heart" size={24} fill="currentColor" />
-          </div>
         </div>
 
         <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-14 px-5 pb-20 lg:grid-cols-2 lg:px-8 lg:pb-28">
           {/* Hero Text */}
-          <div className="max-w-2xl">
+          <div className="relative isolate max-w-2xl">
+            <div className="hero-butterflies" aria-hidden="true">
+              <span>🦋</span>
+              <span>🦋</span>
+              <span>🦋</span>
+            </div>
+            <div className="relative z-10">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-red-100 bg-red-50 px-4 py-2 text-sm font-bold text-red-700 dark:border-red-900/40 dark:bg-red-950/40 dark:text-red-400">
               <Sparkles size={16} />
               Made for Liberians, everywhere
             </div>
 
             <h2 className="text-4xl font-black leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
-              Find someone who
+              <span className="text-red-600">Find someone who</span>
               <span className="block text-red-600">
                 feels like home.
               </span>
@@ -252,6 +248,7 @@ export default function Home() {
                 Liberia & diaspora
               </div>
             </div>
+            </div>
           </div>
 
           {/* Dating Card */}
@@ -261,6 +258,11 @@ export default function Home() {
 
             <div className="relative overflow-hidden rounded-4xl border border-gray-200 bg-white p-3 shadow-2xl dark:border-gray-800 dark:bg-gray-900">
               <div className="couple-scene relative flex h-125 items-end overflow-hidden rounded-3xl">
+                <div className="connection-butterflies" aria-hidden="true">
+                  <span>🦋</span>
+                  <span>🦋</span>
+                  <span>🦋</span>
+                </div>
                 <div className="relative z-10 w-full bg-linear-to-t from-black/80 via-black/40 to-transparent p-7 pt-28 text-white">
                   <div className="mb-2 flex items-center gap-2">
                     <h3 className="text-2xl font-black">
