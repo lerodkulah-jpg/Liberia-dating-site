@@ -37,6 +37,23 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (() => {
+                try {
+                  const stored = localStorage.getItem('love-liberia-theme');
+                  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  const isDark = stored === 'dark' || (stored === 'system' && prefersDark) || (!stored && prefersDark);
+                  document.documentElement.classList.toggle('dark', isDark);
+                  document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+                } catch (error) {
+                  document.documentElement.classList.add('dark');
+                }
+              })();
+            `,
+          }}
+        />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "Organization", name: "Love Liberia", url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000", logo: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/icon.svg`, sameAs: ["https://www.facebook.com/loveliberia", "https://www.instagram.com/loveliberia", "https://www.tiktok.com/@loveliberia", "https://x.com/loveliberia", "https://www.youtube.com/@loveliberia"] }) }} />
         <AppNavigation />
         <PwaRegistration />

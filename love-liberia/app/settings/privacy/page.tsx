@@ -50,8 +50,10 @@ export default function PrivacySettingsPage() {
         setCookiePreferences(cookiesData.preferences || { analytics: false, personalization: false });
         setSessions(securityData.sessions || []);
         setTwoFactorEnabled(Boolean(securityData.twoFactorEnabled));
+        const savedTheme = localStorage.getItem("love-liberia-theme") || "dark";
         setLanguage(localStorage.getItem("love-liberia-language") || "English");
-        setTheme(localStorage.getItem("love-liberia-theme") || "dark");
+        setTheme(savedTheme);
+        applyThemePreference(savedTheme);
       } catch (loadError) {
         setError(loadError instanceof Error ? loadError.message : "Unable to load privacy settings.");
       }
@@ -67,8 +69,23 @@ export default function PrivacySettingsPage() {
     setPrivacy(data.privacy); setStatus("Privacy settings saved.");
   }
 
+  function applyThemePreference(value: string) {
+    if (typeof document === "undefined") return;
+
+    const root = document.documentElement;
+    const shouldUseDark = value === "dark" || (value === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+
+    root.classList.toggle("dark", shouldUseDark);
+    root.style.colorScheme = shouldUseDark ? "dark" : "light";
+  }
+
   function savePreference(key: string, value: string) {
     localStorage.setItem(key, value);
+
+    if (key === "love-liberia-theme") {
+      applyThemePreference(value);
+    }
+
     setStatus("Account preferences saved.");
   }
 
@@ -143,7 +160,7 @@ export default function PrivacySettingsPage() {
 
         <section className="mt-8 rounded-2xl border border-slate-800 bg-slate-900 p-5">
           <h2 className="text-xl font-bold">Account preferences</h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2"><label className="text-sm font-semibold">Language<select value={language} onChange={(event) => { setLanguage(event.target.value); savePreference("love-liberia-language", event.target.value); }} className="mt-2 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 font-normal"><option>English</option><option>French</option></select></label><label className="text-sm font-semibold">Theme<select value={theme} onChange={(event) => { setTheme(event.target.value); savePreference("love-liberia-theme", event.target.value); }} className="mt-2 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 font-normal"><option value="dark">Dark</option><option value="light">Light</option><option value="system">System</option></select></label></div>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2"><label className="text-sm font-semibold">Language<select value={language} onChange={(event) => { setLanguage(event.target.value); savePreference("love-liberia-language", event.target.value); }} className="mt-2 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 font-normal"><option>English</option><option>French</option></select></label><label className="text-sm font-semibold">Theme<select value={theme} onChange={(event) => { const nextTheme = event.target.value; setTheme(nextTheme); savePreference("love-liberia-theme", nextTheme); }} className="mt-2 min-h-11 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 font-normal"><option value="dark">Dark</option><option value="light">Light</option><option value="system">System</option></select></label></div>
         </section>
 
         <section className="mt-5 rounded-2xl border border-slate-800 bg-slate-900 p-5">
