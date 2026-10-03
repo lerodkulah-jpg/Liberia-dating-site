@@ -116,8 +116,11 @@ export default function RegisterPage() {
           <input name="city" placeholder="City" className="min-h-12 rounded-xl border border-gray-700 bg-gray-950 p-3 text-white placeholder:text-gray-400" />
         </div>
 
-        <section className="mt-8 border-t border-gray-800 pt-6">
-          <h2 className="text-lg font-bold">About yourself</h2>
+        <details className="group mt-8 border-t border-gray-800 pt-6">
+          <summary className="flex min-h-11 cursor-pointer items-center justify-between gap-3 text-lg font-bold">
+            <span>About yourself</span>
+            <span className="text-sm font-medium text-gray-400">Optional</span>
+          </summary>
           <p className="mt-1 text-sm text-gray-400">Share a little more about who you are. You can update these details later.</p>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <label className="text-sm text-gray-300 sm:col-span-2">Bio<textarea name="bio" rows={4} maxLength={500} placeholder="Tell people a little about yourself" className="mt-2 w-full resize-none rounded-xl border border-gray-700 bg-gray-950 p-3 text-white placeholder:text-gray-400" /></label>
@@ -148,7 +151,7 @@ export default function RegisterPage() {
               <option>Open to discussion</option>
             </select>
           </div>
-        </section>
+        </details>
 
         <button disabled={loading} type="submit" className="mt-6 min-h-12 w-full rounded-full bg-red-600 py-4 font-bold text-white hover:bg-red-700 disabled:opacity-60">
           {loading ? "Creating account..." : "Create account"}

@@ -31,6 +31,7 @@ const footerInfo = {
 
 export default function Home() {
   const [mobileMenu, setMobileMenu] = useState(false);
+  const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [activeInfo, setActiveInfo] = useState<keyof typeof footerInfo | null>(null);
 
   return (
@@ -61,12 +62,13 @@ export default function Home() {
               Home
             </a>
 
-            <a
-              href="#how"
+            <button
+              type="button"
+              onClick={() => setShowHowItWorks(true)}
               className="text-sm font-semibold transition hover:text-red-600"
             >
               How It Works
-            </a>
+            </button>
 
             <a
               href="#features"
@@ -128,13 +130,16 @@ export default function Home() {
                 Home
               </a>
 
-              <a
-                href="#how"
-                onClick={() => setMobileMenu(false)}
-                className="flex min-h-11 w-full items-center rounded-xl px-3 font-semibold touch-manipulation hover:bg-gray-100 dark:hover:bg-gray-900"
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenu(false);
+                  setShowHowItWorks(true);
+                }}
+                className="flex min-h-11 w-full items-center rounded-xl px-3 text-left font-semibold touch-manipulation hover:bg-gray-100 dark:hover:bg-gray-900"
               >
                 How It Works
-              </a>
+              </button>
 
               <a
                 href="#features"
@@ -184,14 +189,9 @@ export default function Home() {
           <div className="absolute right-0 top-40 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl" />
         </div>
 
-        <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-10 px-5 pb-14 lg:grid-cols-2 lg:px-8 lg:pb-16">
+        <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-8 px-5 pb-10 sm:gap-10 sm:pb-14 lg:grid-cols-2 lg:px-8 lg:pb-16">
           {/* Hero Text */}
           <div className="relative isolate max-w-2xl">
-            <div className="hero-butterflies" aria-hidden="true">
-              <span>🦋</span>
-              <span>🦋</span>
-              <span>🦋</span>
-            </div>
             <div className="relative z-10">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-red-100 bg-red-50 px-4 py-2 text-sm font-bold text-red-700 dark:border-red-900/40 dark:bg-red-950/40 dark:text-red-400">
               <Sparkles size={16} />
@@ -223,12 +223,13 @@ export default function Home() {
                 />
               </a>
 
-              <a
-                href="#how"
+              <button
+                type="button"
+                onClick={() => setShowHowItWorks(true)}
                 className="flex min-h-11 w-full items-center justify-center rounded-full border border-gray-300 px-7 py-4 font-bold transition touch-manipulation hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-900 sm:w-auto"
               >
                 Learn More
-              </a>
+              </button>
             </div>
 
             {/* Trust */}
@@ -257,12 +258,7 @@ export default function Home() {
             <div className="absolute -left-6 bottom-10 h-28 w-28 rounded-full bg-blue-500/20 blur-2xl" />
 
             <div className="relative overflow-hidden rounded-4xl border border-gray-200 bg-white p-3 shadow-2xl dark:border-gray-800 dark:bg-gray-900">
-              <div className="couple-scene relative flex h-112 items-end overflow-hidden rounded-3xl">
-                <div className="connection-butterflies" aria-hidden="true">
-                  <span>🦋</span>
-                  <span>🦋</span>
-                  <span>🦋</span>
-                </div>
+              <div className="couple-scene relative flex h-80 items-end overflow-hidden rounded-3xl sm:h-112">
                 <div className="relative z-10 w-full bg-linear-to-t from-black/80 via-black/40 to-transparent p-7 pt-28 text-white">
                   <div className="mb-2 flex items-center gap-2">
                     <h3 className="text-2xl font-black">
@@ -296,7 +292,7 @@ export default function Home() {
       {/* FEATURES AND HOW IT WORKS */}
       <section
         id="features"
-        className="mx-auto max-w-7xl scroll-mt-24 px-5 py-14 lg:px-8"
+        className="mx-auto max-w-7xl scroll-mt-24 px-5 pt-8 pb-0 sm:pt-14 sm:pb-2 lg:px-8"
       >
         <div id="discover-people" className="scroll-mt-24">
           <div className="mx-auto max-w-2xl text-center">
@@ -304,17 +300,17 @@ export default function Home() {
             Why Love Liberia?
           </p>
 
-          <h2 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">
+          <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-5xl">
             Dating made for real connections
           </h2>
 
-          <p className="mt-5 text-gray-600 dark:text-gray-400">
+          <p className="mt-3 text-gray-600 dark:text-gray-400 sm:mt-5">
             Everything you need to meet people, build trust and
             discover someone special.
           </p>
           </div>
 
-        <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:mt-8 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
           <FeatureCard
             icon={<Heart />}
             title="Smart Matching"
@@ -353,45 +349,14 @@ export default function Home() {
         </div>
         </div>
 
-        <div id="how" className="mt-12 scroll-mt-24 border-t border-gray-200 pt-10 dark:border-gray-800">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="font-bold uppercase tracking-widest text-red-600">
-              Simple & Easy
-            </p>
-
-            <h2 className="mt-2 text-3xl font-black sm:text-4xl">
-              How it works
-            </h2>
-          </div>
-
-          <div className="mt-8 grid gap-6 md:grid-cols-3">
-            <Step
-              number="01"
-              title="Create your profile"
-              description="Tell people about yourself, your interests and the type of relationship you're looking for."
-            />
-
-            <Step
-              number="02"
-              title="Discover people"
-              description="Browse recommended profiles and find people who share your interests and goals."
-            />
-
-            <Step
-              number="03"
-              title="Make a connection"
-              description="Like each other, match, start a conversation and see where the connection takes you."
-            />
-          </div>
-        </div>
       </section>
 
       {/* SAFETY */}
       <section
         id="safety"
-        className="mx-auto max-w-7xl scroll-mt-24 px-5 py-14 lg:px-8"
+        className="mx-auto max-w-7xl scroll-mt-24 px-5 pt-0 pb-0 sm:pt-2 sm:pb-0 lg:px-8"
       >
-        <div className="overflow-hidden rounded-4xl bg-gray-950 p-5 text-white sm:p-8 lg:p-10">
+        <div className="overflow-hidden rounded-4xl bg-gray-950 p-4 pt-2 text-white sm:p-8 lg:p-10">
           <div className="grid items-center gap-8 lg:grid-cols-2">
             <div>
               <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-600">
@@ -417,7 +382,7 @@ export default function Home() {
               </a>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
               <SafetyItem text="Profile verification" />
               <SafetyItem text="Block & report tools" />
               <SafetyItem text="Privacy controls" />
@@ -430,22 +395,22 @@ export default function Home() {
       </section>
 
       {/* CTA */}
-      <section className="px-5 pb-14 lg:px-8">
-        <div className="mx-auto max-w-5xl overflow-hidden rounded-4xl bg-linear-to-br from-red-600 to-red-800 px-6 py-12 text-center text-white shadow-2xl sm:px-12">
-          <Heart className="mx-auto mb-4 fill-white" size={36} />
+      <section className="px-5 pb-1 sm:pb-1.5 lg:px-8">
+        <div className="mx-auto max-w-4xl overflow-hidden rounded-4xl bg-linear-to-br from-red-600 to-red-800 px-4 py-6 text-center text-white shadow-2xl sm:px-8 sm:py-10">
+          <Heart className="mx-auto mb-2 h-6 w-6 fill-white sm:mb-3 sm:h-7.5 sm:w-7.5" size={30} />
 
-          <h2 className="text-3xl font-black sm:text-5xl">
+          <h2 className="text-xl font-black sm:text-4xl">
             Your story could start today.
           </h2>
 
-          <p className="mx-auto mt-5 max-w-xl text-red-100">
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-red-100 sm:mt-4 sm:text-base sm:leading-normal">
             Join Love Liberia and discover genuine people looking for
             friendship, dating and meaningful relationships.
           </p>
 
           <a
             href="/register"
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-white px-8 py-4 font-black text-red-600 shadow-xl transition hover:-translate-y-1"
+            className="mt-5 inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-black text-red-600 shadow-xl transition hover:-translate-y-1 sm:mt-6 sm:px-6 sm:text-base"
           >
             Create Free Account
             <ArrowRight size={19} />
@@ -455,9 +420,9 @@ export default function Home() {
 
       {/* FOOTER */}
       <footer className="border-t border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-950">
-        <div className="mx-auto max-w-7xl px-5 py-10 lg:px-8">
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-            <div>
+        <div className="mx-auto max-w-7xl px-5 pt-1 pb-8 sm:pt-1.5 sm:pb-10 lg:px-8">
+          <div className="grid grid-cols-3 gap-x-2 gap-y-6 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
+            <div className="col-span-3 md:col-span-1">
               <div className="flex items-center gap-3">
                 <img src="/icon.svg" alt="Love Liberia logo" className="h-10 w-10 rounded-full object-cover ring-2 ring-red-500/70 ring-offset-2 ring-offset-gray-50 dark:ring-offset-gray-950" />
 
@@ -514,10 +479,10 @@ export default function Home() {
             />
           </div>
 
-          <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-gray-200 pt-7 text-center text-sm text-gray-500 dark:border-gray-800 md:flex-row md:text-left">
+          <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-gray-200 pt-7 text-center text-sm text-gray-500 dark:border-gray-800 md:mt-12 md:flex-row md:text-left">
             <div>
               <p>© 2026 Love Liberia. All rights reserved.</p>
-              <p>Contact developer: +250791495530 / +231888504430</p>
+              <p>Contact: <a href="mailto:support@loveliberia.com" className="transition hover:text-red-600">support@loveliberia.com</a></p>
             </div>
 
             <div className="flex items-center gap-2 font-semibold text-gray-700 dark:text-gray-300">
@@ -527,6 +492,53 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {showHowItWorks && (
+        <div
+          className="fixed inset-0 z-70 flex items-center justify-center bg-black/70 px-4 py-5"
+          onClick={() => setShowHowItWorks(false)}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") setShowHowItWorks(false);
+          }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="how-it-works-title"
+            className="relative max-h-[90dvh] w-full max-w-4xl overflow-y-auto rounded-3xl border border-gray-200 bg-white p-5 text-gray-900 shadow-2xl dark:border-gray-700 dark:bg-gray-900 dark:text-white sm:p-8"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              autoFocus
+              aria-label="Close how it works"
+              className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-white sm:right-6 sm:top-6"
+              onClick={() => setShowHowItWorks(false)}
+            >
+              <X size={20} />
+            </button>
+            <p className="pr-12 text-sm font-bold uppercase tracking-widest text-red-600">Simple &amp; Easy</p>
+            <h2 id="how-it-works-title" className="mt-2 pr-12 text-2xl font-black sm:text-4xl">How It Works</h2>
+            <div className="mt-6 grid gap-6 sm:mt-8 sm:grid-cols-3">
+              <Step
+                number="01"
+                title="Create your profile"
+                description="Tell people about yourself, your interests and the type of relationship you're looking for."
+              />
+              <Step
+                number="02"
+                title="Discover people"
+                description="Browse recommended profiles and find people who share your interests and goals."
+              />
+              <Step
+                number="03"
+                title="Make a connection"
+                description="Like each other, match, start a conversation and see where the connection takes you."
+              />
+            </div>
+          </section>
+        </div>
+      )}
 
       {activeInfo && (
         <div
@@ -580,14 +592,14 @@ function FeatureCard({
   description: string;
 }) {
   return (
-    <div className="group rounded-3xl border border-gray-200 bg-white p-7 transition duration-300 hover:-translate-y-2 hover:shadow-xl dark:border-gray-800 dark:bg-gray-900">
-      <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-600 transition group-hover:bg-red-600 group-hover:text-white dark:bg-red-950/40">
+    <div className="group rounded-2xl border border-gray-200 bg-white p-4 transition duration-300 hover:-translate-y-2 hover:shadow-xl dark:border-gray-800 dark:bg-gray-900 sm:rounded-3xl sm:p-7">
+      <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-red-600 transition group-hover:bg-red-600 group-hover:text-white dark:bg-red-950/40 sm:mb-6 sm:h-14 sm:w-14 sm:rounded-2xl">
         {icon}
       </div>
 
-      <h3 className="text-xl font-black">{title}</h3>
+      <h3 className="text-lg font-black sm:text-xl">{title}</h3>
 
-      <p className="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-400">
+      <p className="mt-2 text-xs leading-5 text-gray-600 dark:text-gray-400 sm:mt-3 sm:text-sm sm:leading-6">
         {description}
       </p>
     </div>
@@ -607,13 +619,13 @@ function Step({
 }) {
   return (
     <div className="text-center">
-      <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-red-600 text-xl font-black text-white shadow-xl shadow-red-600/20">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-600 text-base font-black text-white shadow-xl shadow-red-600/20 sm:h-20 sm:w-20 sm:text-xl">
         {number}
       </div>
 
-      <h3 className="mt-7 text-2xl font-black">{title}</h3>
+      <h3 className="mt-3 text-base font-black sm:mt-7 sm:text-2xl">{title}</h3>
 
-      <p className="mx-auto mt-3 max-w-sm leading-7 text-gray-600 dark:text-gray-400">
+      <p className="mx-auto mt-2 max-w-sm text-xs leading-5 text-gray-600 dark:text-gray-400 sm:mt-3 sm:text-base sm:leading-7">
         {description}
       </p>
     </div>
@@ -624,12 +636,13 @@ function Step({
 
 function SafetyItem({ text }: { text: string }) {
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-gray-800 bg-gray-900 p-4">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-500/10">
-        <Check size={17} className="text-green-400" />
+    <div className="flex min-w-0 items-center gap-1.5 rounded-xl border border-gray-800 bg-gray-900 p-2 sm:gap-3 sm:rounded-2xl sm:p-3">
+      <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-500/10 sm:h-7 sm:w-7">
+        <Check size={13} className="text-green-400 sm:hidden" />
+        <Check size={17} className="hidden text-green-400 sm:block" />
       </div>
 
-      <span className="text-sm font-semibold">
+      <span className="min-w-0 text-[11px] font-semibold leading-tight sm:text-sm">
         {text}
       </span>
     </div>
@@ -649,9 +662,9 @@ function FooterColumn({
 }) {
   return (
     <div>
-      <h3 className="font-black">{title}</h3>
+      <h3 className="text-sm font-black sm:text-base">{title}</h3>
 
-      <div className="mt-5 flex flex-col gap-3">
+      <div className="mt-3 flex flex-col gap-1 sm:mt-5 sm:gap-3">
         {links.map((link) => {
           const infoKey = link.label as keyof typeof footerInfo;
 
@@ -661,7 +674,7 @@ function FooterColumn({
                 key={link.label}
                 type="button"
                 onClick={() => onSelect(infoKey)}
-                className="flex min-h-11 w-full items-center text-left text-sm text-gray-500 touch-manipulation transition hover:text-red-600"
+                className="flex min-h-11 min-w-0 w-full items-center wrap-break-word text-left text-xs leading-tight text-gray-500 touch-manipulation transition hover:text-red-600 sm:text-sm"
               >
                 {link.label}
               </button>
@@ -672,7 +685,7 @@ function FooterColumn({
             <a
               key={link.label}
               href={link.href}
-              className="flex min-h-11 items-center text-sm text-gray-500 touch-manipulation transition hover:text-red-600"
+              className="flex min-h-11 min-w-0 items-center wrap-break-word text-xs leading-tight text-gray-500 touch-manipulation transition hover:text-red-600 sm:text-sm"
             >
               {link.label}
             </a>

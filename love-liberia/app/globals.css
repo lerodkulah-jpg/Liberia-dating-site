@@ -19,7 +19,6 @@ html {
 html,
 body {
   background-color: var(--background);
-  min-width: 320px;
   overflow-x: hidden;
 }
 
@@ -161,25 +160,6 @@ button {
   }
 }
 
-@keyframes butterfly-float {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) rotate(-8deg);
-  }
-
-  25% {
-    transform: translate3d(28px, -22px, 0) rotate(12deg);
-  }
-
-  50% {
-    transform: translate3d(-12px, -40px, 0) rotate(-10deg);
-  }
-
-  75% {
-    transform: translate3d(-32px, 12px, 0) rotate(10deg);
-  }
-}
-
 .page-transition {
   animation: page-enter 280ms ease-out both;
 }
@@ -223,93 +203,10 @@ button {
     animation: none;
   }
 
-  .hero-butterflies span {
-    animation: none;
-  }
-
-  .connection-butterflies span {
-    animation: none;
-  }
-
   .motion-swipe-like,
   .motion-swipe-pass {
     transition: none;
   }
-}
-
-.hero-butterflies {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.hero-butterflies span {
-  position: absolute;
-  display: block;
-  font-size: 1.6rem;
-  opacity: 0.55;
-  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.35));
-  animation: butterfly-float 7s ease-in-out infinite;
-}
-
-.hero-butterflies span:nth-child(1) {
-  top: 8%;
-  right: 8%;
-}
-
-.hero-butterflies span:nth-child(2) {
-  top: 38%;
-  right: 4%;
-  font-size: 1.4rem;
-  animation-delay: -2.5s;
-  animation-duration: 9s;
-}
-
-.hero-butterflies span:nth-child(3) {
-  top: 72%;
-  left: 5%;
-  font-size: 1.45rem;
-  animation-delay: -4s;
-  animation-duration: 8s;
-}
-
-.connection-butterflies {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.connection-butterflies span {
-  position: absolute;
-  display: block;
-  font-size: 1.5rem;
-  opacity: 0.5;
-  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.4));
-  animation: butterfly-float 8s ease-in-out infinite;
-}
-
-.connection-butterflies span:nth-child(1) {
-  top: 55%;
-  left: 12%;
-}
-
-.connection-butterflies span:nth-child(2) {
-  top: 68%;
-  right: 14%;
-  font-size: 1.3rem;
-  animation-delay: -2.5s;
-  animation-duration: 9s;
-}
-
-.connection-butterflies span:nth-child(3) {
-  top: 42%;
-  right: 35%;
-  font-size: 1.4rem;
-  animation-delay: -4s;
-  animation-duration: 7s;
 }
 
 @keyframes couple-scene-crossfade {
