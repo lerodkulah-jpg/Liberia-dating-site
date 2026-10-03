@@ -39,14 +39,14 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-950 px-4 py-6 sm:px-5 sm:py-10">
+    <main className="login-shell flex min-h-screen items-center justify-center px-4 py-6 sm:px-5 sm:py-10">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center text-white">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-red-600">
-            <Heart size={28} className="fill-white text-white" />
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full ring-2 ring-red-400/70 ring-offset-2 ring-offset-gray-950">
+            <img src="/icon.svg" alt="Love Liberia logo" className="h-14 w-14 rounded-full object-cover" />
           </div>
-          <h1 className="mt-5 text-2xl font-black text-white sm:text-3xl">Welcome back</h1>
-          <p className="mt-2 text-gray-300">Sign in to your Love Liberia account.</p>
+          <h1 className="mt-5 text-2xl font-black text-black sm:text-3xl">Welcome back</h1>
+          <p className="mt-2 text-sm font-medium text-black sm:text-base">Sign in to your Love Liberia account and keep connecting.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="rounded-3xl border border-gray-800 bg-gray-900 p-5 shadow-xl sm:p-7">

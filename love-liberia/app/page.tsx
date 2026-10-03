@@ -40,14 +40,7 @@ export default function Home() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
           {/* Logo */}
           <a href="#home" className="flex min-h-11 items-center gap-3">
-            <div className="brand-mark flex h-11 w-11 items-center justify-center">
-              <span className="brand-stem" aria-hidden="true" />
-              <span className="brand-leaf" aria-hidden="true" />
-              <Heart
-                size={23}
-                className="brand-heart"
-              />
-            </div>
+            <img src="/icon.svg" alt="Love Liberia logo" className="h-11 w-11 rounded-full object-cover ring-2 ring-red-600/70 ring-offset-2 ring-offset-white dark:ring-offset-gray-950" />
 
             <div>
               <h1 className="text-xl font-black tracking-tight">
@@ -263,7 +256,6 @@ export default function Home() {
 
             <div className="relative overflow-hidden rounded-4xl border border-gray-200 bg-white p-3 shadow-2xl dark:border-gray-800 dark:bg-gray-900">
               <div className="couple-scene relative flex h-125 items-end overflow-hidden rounded-3xl">
-
                 <div className="relative z-10 w-full bg-linear-to-t from-black/80 via-black/40 to-transparent p-7 pt-28 text-white">
                   <div className="mb-2 flex items-center gap-2">
                     <h3 className="text-2xl font-black">
@@ -290,7 +282,6 @@ export default function Home() {
                 </div>
               </div>
             </div>
-
           </div>
         </div>
       </section>
@@ -475,12 +466,7 @@ export default function Home() {
           <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
             <div>
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-600">
-                  <Heart
-                    size={20}
-                    className="fill-white text-white"
-                  />
-                </div>
+                <img src="/icon.svg" alt="Love Liberia logo" className="h-10 w-10 rounded-full object-cover ring-2 ring-red-500/70 ring-offset-2 ring-offset-gray-50 dark:ring-offset-gray-950" />
 
                 <span className="text-xl font-black">
                   Love<span className="text-red-600">Liberia</span>
@@ -541,7 +527,10 @@ export default function Home() {
               <p>Contact developer: +250791495530 / +231888504430</p>
             </div>
 
-            <p>Made for meaningful connections ❤️</p>
+            <div className="flex items-center gap-2 font-semibold text-gray-700 dark:text-gray-300">
+              <img src="/icon.svg" alt="Love Liberia logo" className="h-7 w-7 rounded-full object-cover ring-2 ring-red-500/70 ring-offset-2 ring-offset-gray-50 dark:ring-offset-gray-950" />
+              <span>Made for meaningful connections ❤️</span>
+            </div>
           </div>
         </div>
       </footer>

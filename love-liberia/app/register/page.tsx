@@ -90,7 +90,7 @@ export default function RegisterPage() {
       <form ref={formRef} onSubmit={handleSubmit} onInput={saveDraft} className="register-card relative z-10 w-full max-w-lg rounded-3xl border border-white/20 p-5 shadow-2xl sm:p-8">
         <div className="mb-8 text-center">
           <div className="mx-auto flex w-fit items-center gap-2 text-rose-200">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-rose-500 shadow-lg shadow-rose-950/40"><Heart className="h-6 w-6 fill-white text-white" /></span>
+            <img src="/icon.svg" alt="Love Liberia logo" className="h-11 w-11 rounded-full object-cover ring-2 ring-rose-400/70 ring-offset-2 ring-offset-[#140d1d]" />
             <span className="text-xl font-black tracking-tight">Love Liberia</span>
           </div>
           <h1 className="mt-4 text-2xl font-black sm:text-3xl">Create your account</h1>
