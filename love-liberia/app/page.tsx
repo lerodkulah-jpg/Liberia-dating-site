@@ -204,7 +204,7 @@ export default function Home() {
               </span>
             </h2>
 
-            <p className="mt-7 max-w-xl text-lg leading-8 text-gray-600 dark:text-gray-400">
+            <p className="mt-7 max-w-xl text-lg leading-8 text-white/90 dark:text-white/90">
               Meet genuine people from Liberia and around the world.
               Discover meaningful connections, real conversations and
               relationships that can last a lifetime.
@@ -231,19 +231,19 @@ export default function Home() {
             </div>
 
             {/* Trust */}
-            <div className="mt-9 flex flex-wrap gap-5 text-sm text-gray-600 dark:text-gray-400">
+            <div className="mt-9 flex flex-wrap gap-5 text-sm text-white/90 dark:text-white/90">
               <div className="flex items-center gap-2">
-                <Check size={17} className="text-green-500" />
+                <Check size={17} className="text-green-400" />
                 Free to join
               </div>
 
               <div className="flex items-center gap-2">
-                <ShieldCheck size={17} className="text-green-500" />
+                <ShieldCheck size={17} className="text-green-400" />
                 Safety focused
               </div>
 
               <div className="flex items-center gap-2">
-                <Users size={17} className="text-green-500" />
+                <Users size={17} className="text-green-400" />
                 Liberia & diaspora
               </div>
             </div>
