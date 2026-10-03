@@ -12,6 +12,7 @@ import {
   Users,
   X,
 } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
 
@@ -31,7 +32,6 @@ const footerInfo = {
 
 export default function Home() {
   const [mobileMenu, setMobileMenu] = useState(false);
-  const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [activeInfo, setActiveInfo] = useState<keyof typeof footerInfo | null>(null);
 
   return (
@@ -62,13 +62,9 @@ export default function Home() {
               Home
             </a>
 
-            <button
-              type="button"
-              onClick={() => setShowHowItWorks(true)}
-              className="text-sm font-semibold transition hover:text-red-600"
-            >
+            <Link href="/how-it-works" className="text-sm font-semibold transition hover:text-red-600">
               How It Works
-            </button>
+            </Link>
 
             <a
               href="#features"
@@ -130,16 +126,13 @@ export default function Home() {
                 Home
               </a>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileMenu(false);
-                  setShowHowItWorks(true);
-                }}
+              <Link
+                href="/how-it-works"
+                onClick={() => setMobileMenu(false)}
                 className="flex min-h-11 w-full items-center rounded-xl px-3 text-left font-semibold touch-manipulation hover:bg-gray-100 dark:hover:bg-gray-900"
               >
                 How It Works
-              </button>
+              </Link>
 
               <a
                 href="#features"
@@ -223,13 +216,12 @@ export default function Home() {
                 />
               </a>
 
-              <button
-                type="button"
-                onClick={() => setShowHowItWorks(true)}
+              <Link
+                href="/how-it-works"
                 className="flex min-h-11 w-full items-center justify-center rounded-full border border-gray-300 px-7 py-4 font-bold transition touch-manipulation hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-900 sm:w-auto"
               >
                 Learn More
-              </button>
+              </Link>
             </div>
 
             {/* Trust */}
@@ -493,53 +485,6 @@ export default function Home() {
         </div>
       </footer>
 
-      {showHowItWorks && (
-        <div
-          className="fixed inset-0 z-70 flex items-center justify-center bg-black/70 px-4 py-5"
-          onClick={() => setShowHowItWorks(false)}
-          onKeyDown={(event) => {
-            if (event.key === "Escape") setShowHowItWorks(false);
-          }}
-        >
-          <section
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="how-it-works-title"
-            className="relative max-h-[90dvh] w-full max-w-4xl overflow-y-auto rounded-3xl border border-gray-200 bg-white p-5 text-gray-900 shadow-2xl dark:border-gray-700 dark:bg-gray-900 dark:text-white sm:p-8"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <button
-              type="button"
-              autoFocus
-              aria-label="Close how it works"
-              className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-white sm:right-6 sm:top-6"
-              onClick={() => setShowHowItWorks(false)}
-            >
-              <X size={20} />
-            </button>
-            <p className="pr-12 text-sm font-bold uppercase tracking-widest text-red-600">Simple &amp; Easy</p>
-            <h2 id="how-it-works-title" className="mt-2 pr-12 text-2xl font-black sm:text-4xl">How It Works</h2>
-            <div className="mt-6 grid gap-6 sm:mt-8 sm:grid-cols-3">
-              <Step
-                number="01"
-                title="Create your profile"
-                description="Tell people about yourself, your interests and the type of relationship you're looking for."
-              />
-              <Step
-                number="02"
-                title="Discover people"
-                description="Browse recommended profiles and find people who share your interests and goals."
-              />
-              <Step
-                number="03"
-                title="Make a connection"
-                description="Like each other, match, start a conversation and see where the connection takes you."
-              />
-            </div>
-          </section>
-        </div>
-      )}
-
       {activeInfo && (
         <div
           className="fixed inset-0 z-100 flex items-center justify-center bg-black/70 px-5 py-8"
@@ -600,32 +545,6 @@ function FeatureCard({
       <h3 className="text-lg font-black sm:text-xl">{title}</h3>
 
       <p className="mt-2 text-xs leading-5 text-gray-600 dark:text-gray-400 sm:mt-3 sm:text-sm sm:leading-6">
-        {description}
-      </p>
-    </div>
-  );
-}
-
-/* STEP COMPONENT */
-
-function Step({
-  number,
-  title,
-  description,
-}: {
-  number: string;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="text-center">
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-600 text-base font-black text-white shadow-xl shadow-red-600/20 sm:h-20 sm:w-20 sm:text-xl">
-        {number}
-      </div>
-
-      <h3 className="mt-3 text-base font-black sm:mt-7 sm:text-2xl">{title}</h3>
-
-      <p className="mx-auto mt-2 max-w-sm text-xs leading-5 text-gray-600 dark:text-gray-400 sm:mt-3 sm:text-base sm:leading-7">
         {description}
       </p>
     </div>

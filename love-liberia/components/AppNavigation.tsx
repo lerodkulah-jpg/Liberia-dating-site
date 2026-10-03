@@ -44,7 +44,7 @@ function isActive(pathname: string, href: string) {
 
 export default function AppNavigation() {
   const pathname = usePathname();
-  const hiddenRoutes = ["/", "/login", "/register", "/admin", "/privacy", "/terms", "/cookies", "/safety"];
+  const hiddenRoutes = ["/", "/login", "/register", "/admin", "/privacy", "/terms", "/cookies", "/safety", "/how-it-works"];
 
   if (hiddenRoutes.some((route) => pathname === route || pathname.startsWith(`${route}/`))) {
     if (pathname === "/") return null;
