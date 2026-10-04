@@ -127,6 +127,7 @@ export async function GET(request: Request) {
       }),
       prisma.message.groupBy({
         by: ["senderId", "receiverId"],
+        orderBy: [{ senderId: "asc" }, { receiverId: "asc" }],
         where: {
           OR: [
             { senderId: userId, receiverId: { in: candidateIds } },

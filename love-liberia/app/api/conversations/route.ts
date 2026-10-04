@@ -60,6 +60,7 @@ export async function GET() {
       }),
       prisma.message.groupBy({
         by: ["senderId"],
+        orderBy: { senderId: "asc" },
         where: {
           senderId: { in: otherUserIds },
           receiverId: userId,
@@ -71,7 +72,12 @@ export async function GET() {
 
     const usersById = new Map(users.map((user) => [user.id, user]));
     const unreadCountsByUserId = new Map(
-      unreadMessages.map((message) => [message.senderId, message._count._all])
+      unreadMessages.map((message) => [
+        message.senderId,
+        typeof message._count === "object" && message._count !== null
+          ? message._count._all ?? 0
+          : 0,
+      ])
     );
     const conversations = Array.from(latestMessages.entries()).map(
       ([otherUserId, message]) => {
