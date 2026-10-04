@@ -3,11 +3,14 @@ import { hasPaidMembershipAccess } from "./plan-config";
 
 export { FREE_DAILY_LIKE_LIMIT, FREE_DAILY_SUPER_LIKE_LIMIT, hasPaidMembershipAccess, MEMBERSHIP_PRICES, type PaidMembershipPlan } from "./plan-config";
 
-export async function hasActivePaidMembership(userId: string) {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { membershipPlan: true, membershipStatus: true },
-  });
+export async function hasActivePaidMembership(
+  userId: string,
+  userDetails?: { membershipPlan: string; membershipStatus: string }
+) {
+  const user = userDetails ?? await prisma.user.findUnique({
+      where: { id: userId },
+      select: { membershipPlan: true, membershipStatus: true },
+    });
   if (!user || !hasPaidMembershipAccess(user.membershipPlan, user.membershipStatus)) return false;
 
   const subscription = await prisma.subscription.findFirst({

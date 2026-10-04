@@ -62,7 +62,7 @@ export default async function AdminDashboardPage() {
     locationUsers,
     monthlyActiveUsers,
     retentionUsers,
-  ] = await Promise.all([
+  ] = await prisma.$transaction([
       prisma.user.count(),
       prisma.user.count({ where: { isActive: true } }),
       prisma.user.count({ where: { photoVerified: true } }),

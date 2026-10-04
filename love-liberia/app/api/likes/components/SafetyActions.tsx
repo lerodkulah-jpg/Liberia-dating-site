@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 type SafetyActionsProps = {
   userId: string;
   userName: string;
+  initialBlocked?: boolean;
 };
 
 const reportReasons = [
@@ -23,8 +24,9 @@ const reportReasons = [
 export default function SafetyActions({
   userId,
   userName,
+  initialBlocked,
 }: SafetyActionsProps) {
-  const [blocked, setBlocked] = useState(false);
+  const [blocked, setBlocked] = useState(initialBlocked ?? false);
   const [hidden, setHidden] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showReport, setShowReport] = useState(false);
@@ -33,6 +35,11 @@ export default function SafetyActions({
   const [message, setMessage] = useState("");
 
   useEffect(() => {
+    if (initialBlocked !== undefined) {
+      setBlocked(initialBlocked);
+      return;
+    }
+
     async function fetchBlockStatus() {
       try {
         const response = await fetch(
@@ -51,7 +58,7 @@ export default function SafetyActions({
     }
 
     void fetchBlockStatus();
-  }, [userId]);
+  }, [initialBlocked, userId]);
 
   async function handleBlock() {
     const confirmed = window.confirm(

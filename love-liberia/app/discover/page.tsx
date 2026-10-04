@@ -59,6 +59,7 @@ export default function DiscoverPage() {
   const [error, setError] = useState("");
   const [dailyLikesRemaining, setDailyLikesRemaining] = useState<number | null>(FREE_DAILY_LIKE_LIMIT);
   const [superLikesRemaining, setSuperLikesRemaining] = useState<number | null>(5);
+  const [currentUserIsOnline, setCurrentUserIsOnline] = useState(false);
   const [canSeeWhoLikedYou, setCanSeeWhoLikedYou] = useState(false);
   const [history, setHistory] = useState<User[]>([]);
   const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
@@ -145,6 +146,7 @@ export default function DiscoverPage() {
       setHasMore(Boolean(data.hasMore));
       setDailyLikesRemaining(typeof data.dailyLikesRemaining === "number" ? data.dailyLikesRemaining : null);
       setSuperLikesRemaining(typeof data.superLikesRemaining === "number" ? data.superLikesRemaining : null);
+      setCurrentUserIsOnline(data.currentUserIsOnline === true);
       setCanSeeWhoLikedYou(data.canSeeWhoLikedYou === true);
     } catch {
       setError("Something went wrong.");
@@ -281,7 +283,7 @@ export default function DiscoverPage() {
             <p className="text-sm text-gray-500">Smart recommendations</p>
           </div>
 
-          <OnlineStatus />
+          <OnlineStatus isOnline={currentUserIsOnline} />
 
           <button
             onClick={() =>
@@ -662,6 +664,7 @@ export default function DiscoverPage() {
                 <SafetyActions
                   userId={user.id}
                   userName={user.firstName}
+                  initialBlocked={false}
                 />
               </div>
             </article>

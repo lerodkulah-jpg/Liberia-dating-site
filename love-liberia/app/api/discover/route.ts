@@ -18,12 +18,22 @@ export async function GET(request: Request) {
 
     const currentUser = await prisma.user.findUnique({
       where: { id: userId },
-      include: {
+      select: {
+        interests: true,
+        gender: true,
+        city: true,
+        county: true,
+        relationshipGoal: true,
+        hobbies: true,
+        smokingPreference: true,
+        drinkingPreference: true,
+        childrenPreference: true,
+        education: true,
+        languages: true,
+        membershipPlan: true,
+        membershipStatus: true,
+        isOnline: true,
         preferences: true,
-        sentLikes: { select: { receiverId: true } },
-        receivedLikes: { select: { senderId: true } },
-        sentMessages: { select: { receiverId: true } },
-        receivedMessages: { select: { senderId: true } },
       },
     });
 
@@ -34,7 +44,7 @@ export async function GET(request: Request) {
       );
     }
 
-    const hasPaidAccess = await hasActivePaidMembership(userId);
+    const hasPaidAccess = await hasActivePaidMembership(userId, currentUser);
 
     const searchParams = new URL(request.url).searchParams;
     const county = searchParams.get("county");
@@ -87,6 +97,7 @@ export async function GET(request: Request) {
         profilePhotos: {
           select: { id: true, url: true },
           orderBy: { createdAt: "asc" },
+          take: 3,
         },
         photoVerified: true,
         isOnline: true,
@@ -102,18 +113,36 @@ export async function GET(request: Request) {
 
     const dayStart = new Date();
     dayStart.setHours(0, 0, 0, 0);
-    const [dailyLikes, dailySuperLikes] = await Promise.all([
-      prisma.like.count({ where: { senderId: userId, createdAt: { gte: dayStart }, isSuperLike: false } }),
-      prisma.like.count({ where: { senderId: userId, createdAt: { gte: dayStart }, isSuperLike: true } }),
+    const candidateIds = users.map((user) => user.id);
+    const [likes, messages] = await prisma.$transaction([
+      prisma.like.findMany({
+        where: {
+          OR: [
+            { senderId: userId, receiverId: { in: candidateIds } },
+            { senderId: { in: candidateIds }, receiverId: userId },
+            ...(!hasPaidAccess ? [{ senderId: userId, createdAt: { gte: dayStart } }] : []),
+          ],
+        },
+        select: { senderId: true, receiverId: true, isSuperLike: true, createdAt: true },
+      }),
+      prisma.message.groupBy({
+        by: ["senderId", "receiverId"],
+        where: {
+          OR: [
+            { senderId: userId, receiverId: { in: candidateIds } },
+            { senderId: { in: candidateIds }, receiverId: userId },
+          ],
+        },
+      }),
     ]);
+    const dailyLikes = likes.filter((like) => like.senderId === userId && like.createdAt >= dayStart && !like.isSuperLike).length;
+    const dailySuperLikes = likes.filter((like) => like.senderId === userId && like.createdAt >= dayStart && like.isSuperLike).length;
     const currentInterests = new Set((currentUser.interests || "").split(",").map((item) => item.trim().toLowerCase()).filter(Boolean));
-    const likedByCurrentUser = new Set(currentUser.sentLikes.map((like) => like.receiverId));
-    const likedCurrentUser = new Set(currentUser.receivedLikes.map((like) => like.senderId));
+    const likedByCurrentUser = new Set(likes.filter((like) => like.senderId === userId).map((like) => like.receiverId));
+    const likedCurrentUser = new Set(likes.filter((like) => like.receiverId === userId).map((like) => like.senderId));
     const interactedWith = new Set([
-      ...likedByCurrentUser,
-      ...likedCurrentUser,
-      ...currentUser.sentMessages.map((message) => message.receiverId),
-      ...currentUser.receivedMessages.map((message) => message.senderId),
+      ...likes.map((like) => like.senderId === userId ? like.receiverId : like.senderId),
+      ...messages.map((message) => message.senderId === userId ? message.receiverId : message.senderId),
     ]);
     const genderPreferenceMatches = (gender: string) =>
       !currentUser.preferences ||
@@ -191,7 +220,7 @@ export async function GET(request: Request) {
     };
     const usersForView = sort === "recommended" ? byScore : sort === "online" ? byActivity : profiles;
     return NextResponse.json(
-      { users: usersForView, sections, page, hasMore, canSeeWhoLikedYou: hasPaidAccess, dailyLikesRemaining: hasPaidAccess ? null : Math.max(0, FREE_DAILY_LIKE_LIMIT - dailyLikes), superLikesRemaining: hasPaidAccess ? null : Math.max(0, FREE_DAILY_SUPER_LIKE_LIMIT - dailySuperLikes) },
+      { users: usersForView, sections, page, hasMore, currentUserIsOnline: currentUser.isOnline, canSeeWhoLikedYou: hasPaidAccess, dailyLikesRemaining: hasPaidAccess ? null : Math.max(0, FREE_DAILY_LIKE_LIMIT - dailyLikes), superLikesRemaining: hasPaidAccess ? null : Math.max(0, FREE_DAILY_SUPER_LIKE_LIMIT - dailySuperLikes) },
       { headers: { "Cache-Control": "private, max-age=15, stale-while-revalidate=30" } }
     );
   } catch (error) {

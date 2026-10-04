@@ -11,10 +11,10 @@ export default function OnlineStatus({ isOnline }: { isOnline?: boolean }) {
     }
 
     let active = true;
-    fetch("/api/profile", { cache: "no-store" })
+    fetch("/api/status", { cache: "no-store" })
       .then((response) => (response.ok ? response.json() : null))
       .then((data) => {
-        if (active && data?.user) setCurrentStatus(Boolean(data.user.isOnline));
+        if (active && typeof data?.isOnline === "boolean") setCurrentStatus(data.isOnline);
       })
       .catch(() => undefined);
 
