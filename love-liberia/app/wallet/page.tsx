@@ -13,22 +13,17 @@ const productMeta = {
 
 type Product = { label: string; description: string; credits: number; amountCents: number };
 type Transaction = { id: string; type: string; credits: number; amountCents: number; status: string; createdAt: string };
-type PaymentMethod = "BANK_TRANSFER" | "MOBILE_MONEY";
+type PaymentMethod = "CARD" | "MOBILE_MONEY" | "PAYPAL";
 type MobileMoneyProvider = "Orange Money" | "MTN Mobile Money" | "Lonestar Cell" | "Other";
 
 const mobileMoneyOptions: MobileMoneyProvider[] = ["Orange Money", "MTN Mobile Money", "Lonestar Cell", "Other"];
-const bankOptions = ["Ecobank Liberia", "Access Bank Liberia", "United Bank for Africa (UBA)", "Other bank account"];
-
 export default function WalletPage() {
   const [balance, setBalance] = useState(0);
   const [products, setProducts] = useState<Record<string, Product>>({});
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
   const [loadingProduct, setLoadingProduct] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("BANK_TRANSFER");
-  const [bankName, setBankName] = useState("");
-  const [bankAccountName, setBankAccountName] = useState("");
-  const [bankAccountNumber, setBankAccountNumber] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("CARD");
   const [mobileProvider, setMobileProvider] = useState<MobileMoneyProvider>("Orange Money");
   const [mobileAccountName, setMobileAccountName] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
@@ -47,6 +42,11 @@ export default function WalletPage() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
+      const checkoutStatus = new URLSearchParams(window.location.search).get("credits");
+      if (checkoutStatus === "success") setMessage("Payment completed. Your credits are being confirmed.");
+      if (checkoutStatus === "cancelled") setMessage("Checkout was cancelled.");
+      if (checkoutStatus === "error") setError("We could not confirm your payment. Please contact support if you were charged.");
+
       refreshWallet().catch((reason: Error) => setError(reason.message));
       fetch("/api/payments/account", { cache: "no-store" }).then(async (response) => {
         if (response.ok) setReceivingAccount(await response.json());
@@ -65,10 +65,14 @@ export default function WalletPage() {
       const response = await fetch("/api/wallet", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ product: selectedProduct, paymentMethod, bankName, bankAccountName, bankAccountNumber, mobileProvider, mobileAccountName, mobileNumber }),
+        body: JSON.stringify({ product: selectedProduct, paymentMethod, mobileProvider, mobileAccountName, mobileNumber }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Unable to purchase credits.");
+      if (data.session?.url) {
+        window.location.assign(data.session.url);
+        return;
+      }
       setMessage(data.message);
       await refreshWallet();
       setSelectedProduct(null);
@@ -88,11 +92,50 @@ export default function WalletPage() {
         {error && <div className="mt-7 rounded-xl border border-red-400/30 bg-red-950/40 p-4 text-red-200">{error}</div>}
         <h2 className="mt-12 text-2xl font-black">Purchase credits</h2>
         <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{Object.entries(products).map(([key, product]) => { const meta = productMeta[key as keyof typeof productMeta]; const Icon = meta.icon; return <article key={key} className="rounded-2xl border border-white/10 bg-white/5 p-5"><div className="flex items-center justify-between"><div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 text-rose-200"><Icon className="h-5 w-5" /></div><span className="text-sm font-black text-rose-200">{product.credits} credits</span></div><h3 className="mt-5 text-xl font-black">{product.label || meta.label}</h3><p className="mt-2 min-h-12 text-sm text-white/60">{product.description}</p><p className="mt-5 text-2xl font-black">${(product.amountCents / 100).toFixed(2)}</p><button type="button" onClick={() => { setSelectedProduct(key); setMessage(""); setError(""); }} disabled={loadingProduct !== ""} className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-rose-300 px-4 py-3 font-bold text-rose-950 hover:bg-rose-200 disabled:opacity-60">{loadingProduct === key && <Loader2 className="h-4 w-4 animate-spin" />}Buy credits</button></article>; })}</div>
-        {selectedProduct && <form onSubmit={purchase} className="mt-10 rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-8"><p className="text-sm font-bold uppercase tracking-[0.25em] text-rose-300">Payment details</p><h2 className="mt-3 text-2xl font-black">Pay for {products[selectedProduct]?.label || "credits"}</h2><div className="mt-6 grid gap-4 md:grid-cols-2"><label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-white/10 bg-[#180f22] p-4"><input type="radio" name="paymentMethod" checked={paymentMethod === "BANK_TRANSFER"} onChange={() => setPaymentMethod("BANK_TRANSFER")} className="mt-1 h-4 w-4 accent-rose-400" /><span><span className="block font-black">Bank transfer</span><span className="mt-1 block text-xs text-rose-200/80">Ecobank / Access / UBA</span></span></label><label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-white/10 bg-[#180f22] p-4"><input type="radio" name="paymentMethod" checked={paymentMethod === "MOBILE_MONEY"} onChange={() => setPaymentMethod("MOBILE_MONEY")} className="mt-1 h-4 w-4 accent-rose-400" /><span><span className="block font-black">Mobile money</span><span className="mt-1 block text-xs text-rose-200/80">Orange Money / MTN / Lonestar</span></span></label></div>
-          {paymentMethod === "BANK_TRANSFER" ? <div className="mt-6 grid gap-4 md:grid-cols-2"><label className="text-sm font-semibold md:col-span-2">Select a bank account<select value={bankName} onChange={(event) => setBankName(event.target.value)} className="mt-2 w-full rounded-xl border border-rose-300/40 bg-[#120d19] px-4 py-3 text-white" required><option value="">Choose a bank account</option>{bankOptions.map((option) => <option key={option} value={option}>{option}</option>)}</select></label><label className="text-sm font-semibold">Account name<input value={bankAccountName} onChange={(event) => setBankAccountName(event.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-[#120d19] px-4 py-3 text-white" required /></label><label className="text-sm font-semibold">Account number<input value={bankAccountNumber} onChange={(event) => setBankAccountNumber(event.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-[#120d19] px-4 py-3 text-white" required /></label></div> : <div className="mt-6 grid gap-4 md:grid-cols-2"><label className="text-sm font-semibold md:col-span-2">Select mobile money provider<select value={mobileProvider} onChange={(event) => setMobileProvider(event.target.value as MobileMoneyProvider)} className="mt-2 w-full rounded-xl border border-rose-300/40 bg-[#120d19] px-4 py-3 text-white" required>{mobileMoneyOptions.map((option) => <option key={option} value={option}>{option}</option>)}</select></label><label className="text-sm font-semibold">Account name<input value={mobileAccountName} onChange={(event) => setMobileAccountName(event.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-[#120d19] px-4 py-3 text-white" required /></label><label className="text-sm font-semibold">Mobile number<input value={mobileNumber} onChange={(event) => setMobileNumber(event.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-[#120d19] px-4 py-3 text-white" required /></label></div>}
-          <div className="mt-6 rounded-2xl border border-rose-300/40 bg-[#1f1328] p-5 text-sm"><p className="font-black uppercase tracking-[0.22em] text-rose-300">Love Liberia receiving account</p><div className="mt-4 grid gap-3 sm:grid-cols-2"><p>Account name: <strong>{receivingAccount.accountName || "Not configured yet"}</strong></p><p>Email: <strong>{receivingAccount.accountEmail || "Not configured yet"}</strong></p><p>Account ID: <strong>{receivingAccount.accountId || "Not configured yet"}</strong></p><p>Settlement bank: <strong>{receivingAccount.settlementBank || "Not configured yet"}</strong></p></div></div>
-          <div className="mt-6 flex justify-end gap-3"><button type="button" onClick={() => setSelectedProduct(null)} className="rounded-xl border border-white/10 px-5 py-3 font-semibold">Cancel</button><button type="submit" disabled={loadingProduct !== ""} className="rounded-xl bg-rose-300 px-5 py-3 font-bold text-rose-950 disabled:opacity-60">{loadingProduct === selectedProduct ? "Submitting..." : "Submit payment details"}</button></div>
-        </form>}
+        {selectedProduct && (
+          <form onSubmit={purchase} className="mt-10 rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-8">
+            <p className="text-sm font-bold uppercase tracking-[0.25em] text-rose-300">Payment details</p>
+            <h2 className="mt-3 text-2xl font-black">Pay for {products[selectedProduct]?.label || "credits"}</h2>
+            <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              <label className={`flex min-h-20 cursor-pointer items-start gap-3 rounded-2xl border p-4 text-sm transition-colors ${paymentMethod === "CARD" ? "border-rose-300 bg-rose-500/10" : "border-white/10 bg-[#180f22] hover:border-white/20"}`}>
+                <input type="radio" name="paymentMethod" checked={paymentMethod === "CARD"} onChange={() => setPaymentMethod("CARD")} className="mt-1 h-4 w-4 accent-rose-400" />
+                <span><span className="block font-black">Credit or debit card</span><span className="mt-1 block text-xs text-rose-200/80">Processed by PayPal; card option where available</span></span>
+              </label>
+              <label className={`flex min-h-20 cursor-pointer items-start gap-3 rounded-2xl border p-4 text-sm transition-colors ${paymentMethod === "MOBILE_MONEY" ? "border-rose-300 bg-rose-500/10" : "border-white/10 bg-[#180f22] hover:border-white/20"}`}>
+                <input type="radio" name="paymentMethod" checked={paymentMethod === "MOBILE_MONEY"} onChange={() => setPaymentMethod("MOBILE_MONEY")} className="mt-1 h-4 w-4 accent-rose-400" />
+                <span><span className="block font-black">Mobile money</span><span className="mt-1 block text-xs text-rose-200/80">Orange Money / MTN / Lonestar</span></span>
+              </label>
+              <label className={`flex min-h-20 cursor-pointer items-start gap-3 rounded-2xl border p-4 text-sm transition-colors ${paymentMethod === "PAYPAL" ? "border-rose-300 bg-rose-500/10" : "border-white/10 bg-[#180f22] hover:border-white/20"}`}>
+                <input type="radio" name="paymentMethod" checked={paymentMethod === "PAYPAL"} onChange={() => setPaymentMethod("PAYPAL")} className="mt-1 h-4 w-4 accent-rose-400" />
+                <span><span className="block font-black">PayPal</span><span className="mt-1 block text-xs text-rose-200/80">Secure online checkout</span></span>
+              </label>
+            </div>
+            {paymentMethod === "MOBILE_MONEY" ? (
+              <div className="mt-6 grid gap-4 md:grid-cols-2">
+                <label className="text-sm font-semibold md:col-span-2">Select mobile money provider<select value={mobileProvider} onChange={(event) => setMobileProvider(event.target.value as MobileMoneyProvider)} className="mt-2 w-full rounded-xl border border-rose-300/40 bg-[#120d19] px-4 py-3 text-white" required>{mobileMoneyOptions.map((option) => <option key={option} value={option}>{option}</option>)}</select></label>
+                <label className="text-sm font-semibold">Account name<input value={mobileAccountName} onChange={(event) => setMobileAccountName(event.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-[#120d19] px-4 py-3 text-white" required /></label>
+                <label className="text-sm font-semibold">Mobile number<input value={mobileNumber} onChange={(event) => setMobileNumber(event.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-[#120d19] px-4 py-3 text-white" required /></label>
+              </div>
+            ) : null}
+            {paymentMethod === "MOBILE_MONEY" && (
+              <div className="mt-6 rounded-2xl border border-rose-300/40 bg-[#1f1328] p-5 text-sm">
+                <p className="font-black uppercase tracking-[0.22em] text-rose-300">Love Liberia receiving account</p>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <p>Account name: <strong>{receivingAccount.accountName || "Not configured yet"}</strong></p>
+                  <p>Email: <strong>{receivingAccount.accountEmail || "Not configured yet"}</strong></p>
+                  <p>Account ID: <strong>{receivingAccount.accountId || "Not configured yet"}</strong></p>
+                  <p>Settlement bank: <strong>{receivingAccount.settlementBank || "Not configured yet"}</strong></p>
+                </div>
+              </div>
+            )}
+            <div className="mt-6 flex justify-end gap-3">
+              <button type="button" onClick={() => setSelectedProduct(null)} className="rounded-xl border border-white/10 px-5 py-3 font-semibold">Cancel</button>
+              <button type="submit" disabled={loadingProduct !== ""} className="rounded-xl bg-rose-300 px-5 py-3 font-bold text-rose-950 disabled:opacity-60">
+                {loadingProduct === selectedProduct ? "Submitting..." : paymentMethod === "PAYPAL" ? "Continue to PayPal" : paymentMethod === "CARD" ? "Continue to secure card checkout" : "Submit payment details"}
+              </button>
+            </div>
+          </form>
+        )}
         <h2 className="mt-12 text-2xl font-black">Recent activity</h2><div className="mt-4 space-y-3">{transactions.map((transaction) => <div key={transaction.id} className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-4 text-sm"><span>{transaction.credits} credits</span><span className="text-white/50">{transaction.status}</span></div>)}</div>
       </section>
     </main>

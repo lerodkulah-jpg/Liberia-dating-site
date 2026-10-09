@@ -28,32 +28,12 @@ export async function POST(request: Request) {
 
   try {
     const payload = await request.json();
-    const { product, paymentMethod, bankName, bankAccountName, bankAccountNumber, mobileProvider, mobileAccountName, mobileNumber } = payload;
+    const { product, paymentMethod, mobileProvider, mobileAccountName, mobileNumber } = payload;
     if (!(product in creditProducts)) return NextResponse.json({ error: "Choose a valid credit package." }, { status: 400 });
     const key = product as CreditProduct;
     const selected = creditProducts[key];
-
-    if (paymentMethod === "BANK_TRANSFER") {
-      if (!bankName || !bankAccountName || !bankAccountNumber) {
-        return NextResponse.json({ error: "Please provide your bank name, account name, and account number." }, { status: 400 });
-      }
-
-      const providerReference = `manual_bank_${Date.now()}_${userId}`;
-      await prisma.creditTransaction.create({
-        data: {
-          userId,
-          type: key,
-          credits: selected.credits,
-          amountCents: selected.amountCents,
-          status: "PENDING",
-          providerReference,
-        },
-      });
-
-      return NextResponse.json({
-        requiresManualVerification: true,
-        message: "Your bank payment is pending admin review. Credits will be added after approval.",
-      });
+    if (paymentMethod !== undefined && paymentMethod !== "CARD" && paymentMethod !== "MOBILE_MONEY" && paymentMethod !== "PAYPAL") {
+      return NextResponse.json({ error: "Choose a supported payment method." }, { status: 400 });
     }
 
     if (paymentMethod === "MOBILE_MONEY") {
@@ -80,9 +60,10 @@ export async function POST(request: Request) {
     }
 
     // Default checkout flow for card-based or external payment processing.
-    const session = await getBillingAdapter().createCreditCheckoutSession({ userId, product: key, amountCents: selected.amountCents, returnUrl: publicUrl(request, "/wallet") });
+    const checkoutProvider = paymentMethod === "PAYPAL" || paymentMethod === "CARD" ? "paypal" : getPaymentProvider();
+    const session = await getBillingAdapter(checkoutProvider).createCreditCheckoutSession({ userId, product: key, amountCents: selected.amountCents, returnUrl: publicUrl(request, "/wallet") });
 
-    const mockSettlement = getPaymentProvider() === "mock" && process.env.NODE_ENV !== "production";
+    const mockSettlement = checkoutProvider === "mock" && process.env.NODE_ENV !== "production";
 
     if (mockSettlement) {
       await prisma.$transaction([

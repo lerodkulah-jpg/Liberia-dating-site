@@ -60,6 +60,8 @@ Authenticated endpoints use the `love_liberia_token` HTTP-only cookie. JSON requ
 | GET/POST | `/gifts` | List received gifts or send a gift |
 | GET/POST | `/boosts` | List or start profile boosts |
 | POST | `/billing/checkout` | Start a billing checkout session |
+| POST | `/payments/webhook` | Receive signed payment-provider events, including card payment confirmation |
+| GET | `/payments/paypal/capture` | Verify and capture an approved PayPal order, then return to checkout |
 
 ## Safety and verification
 

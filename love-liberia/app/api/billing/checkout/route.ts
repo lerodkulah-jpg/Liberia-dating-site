@@ -14,43 +14,12 @@ export async function POST(request: Request) {
 
   try {
     const payload = await request.json();
-    const { plan, paymentMethod, bankName, bankAccountName, bankAccountNumber, mobileProvider, mobileAccountName, mobileNumber } = payload;
+    const { plan, paymentMethod, mobileProvider, mobileAccountName, mobileNumber } = payload;
 
     if (plan !== "PREMIUM" && plan !== "VIP") return NextResponse.json({ error: "Choose a paid membership plan." }, { status: 400 });
     const paidPlan = plan as "PREMIUM" | "VIP";
-
-    if (paymentMethod === "BANK_TRANSFER") {
-      if (!bankName || !bankAccountName || !bankAccountNumber) {
-        return NextResponse.json({ error: "Please provide your bank name, account name, and account number." }, { status: 400 });
-      }
-
-      const providerReference = `manual_bank_${Date.now()}_${userId}`;
-      const subscription = await prisma.subscription.create({
-        data: {
-          userId,
-          plan,
-          status: "PENDING",
-          endsAt: null,
-        },
-      });
-
-      await prisma.payment.create({
-        data: {
-          userId,
-          subscriptionId: subscription.id,
-          amountCents: MEMBERSHIP_PRICES[paidPlan],
-          currency: "USD",
-          status: "PENDING",
-          provider: "BANK_TRANSFER",
-          providerReference,
-        },
-      });
-
-      return NextResponse.json({
-        requiresManualVerification: true,
-        message: "Your bank payment has been submitted for admin review. It will be approved before your membership is activated.",
-        session: { id: providerReference, url: "", plan },
-      });
+    if (paymentMethod !== undefined && paymentMethod !== "CARD" && paymentMethod !== "MOBILE_MONEY" && paymentMethod !== "PAYPAL") {
+      return NextResponse.json({ error: "Choose a supported payment method." }, { status: 400 });
     }
 
     if (paymentMethod === "MOBILE_MONEY") {
@@ -87,7 +56,8 @@ export async function POST(request: Request) {
       });
     }
 
-    const session = await getBillingAdapter().createCheckoutSession({ userId, plan: plan as Exclude<MembershipPlan, "FREE">, returnUrl: publicUrl(request, "/membership") });
+    const provider = paymentMethod === "PAYPAL" || paymentMethod === "CARD" ? "paypal" : undefined;
+    const session = await getBillingAdapter(provider).createCheckoutSession({ userId, plan: plan as Exclude<MembershipPlan, "FREE">, returnUrl: publicUrl(request, "/membership") });
     return NextResponse.json({ session, requiresManualVerification: false });
   } catch (error) {
     console.error("Checkout session error:", error);

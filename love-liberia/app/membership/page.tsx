@@ -36,7 +36,7 @@ const plans = [
 ] as const;
 
 type Membership = { membershipPlan: string; membershipStatus: string };
-type PaymentMethod = "BANK_TRANSFER" | "MOBILE_MONEY";
+type PaymentMethod = "CARD" | "MOBILE_MONEY" | "PAYPAL";
 type MobileMoneyProvider = "Orange Money" | "MTN Mobile Money" | "Lonestar Cell" | "Other";
 
 const mobileMoneyOptions: Array<{ label: string; value: MobileMoneyProvider }> = [
@@ -46,28 +46,25 @@ const mobileMoneyOptions: Array<{ label: string; value: MobileMoneyProvider }> =
   { label: "Other mobile money provider", value: "Other" },
 ];
 
-const bankOptions = [
-  "Ecobank Liberia",
-  "Access Bank Liberia",
-  "United Bank for Africa (UBA)",
-  "Other bank account",
-];
-
 export default function MembershipPage() {
   const [membership, setMembership] = useState<Membership>({ membershipPlan: "FREE", membershipStatus: "ACTIVE" });
   const [message, setMessage] = useState("");
   const [loadingPlan, setLoadingPlan] = useState("");
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("BANK_TRANSFER");
-  const [bankName, setBankName] = useState("");
-  const [bankAccountName, setBankAccountName] = useState("");
-  const [bankAccountNumber, setBankAccountNumber] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("CARD");
   const [mobileProvider, setMobileProvider] = useState<MobileMoneyProvider>("Orange Money");
   const [mobileAccountName, setMobileAccountName] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
   const [receivingAccount, setReceivingAccount] = useState({ accountName: "", accountEmail: "", accountId: "", currency: "USD", settlementBank: "" });
 
   useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const checkoutStatus = new URLSearchParams(window.location.search).get("checkout");
+      if (checkoutStatus === "success") setMessage("Payment completed. Your membership is being confirmed.");
+      if (checkoutStatus === "cancelled") setMessage("Checkout was cancelled.");
+      if (checkoutStatus === "error") setMessage("We could not confirm your payment. Please contact support if you were charged.");
+    }, 0);
+
     fetch("/api/billing/checkout", { cache: "no-store" }).then(async (response) => {
       if (response.ok) setMembership((await response.json()).membership);
     }).catch(() => undefined);
@@ -77,6 +74,7 @@ export default function MembershipPage() {
         setReceivingAccount((await response.json()) as typeof receivingAccount);
       }
     }).catch(() => undefined);
+    return () => window.clearTimeout(timer);
   }, []);
 
   async function choosePlan(plan: string) {
@@ -99,9 +97,6 @@ export default function MembershipPage() {
         body: JSON.stringify({
           plan: selectedPlan,
           paymentMethod,
-          bankName,
-          bankAccountName,
-          bankAccountNumber,
           mobileProvider,
           mobileAccountName,
           mobileNumber,
@@ -157,11 +152,11 @@ export default function MembershipPage() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <label className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 text-sm font-semibold transition-all ${paymentMethod === "BANK_TRANSFER" ? "border-rose-300 bg-rose-500/10 shadow-lg shadow-rose-950/30" : "border-white/10 bg-[#180f22] text-white hover:border-white/20 hover:bg-[#1d1526]"}`}>
-                <input type="radio" name="paymentMethod" checked={paymentMethod === "BANK_TRANSFER"} onChange={() => setPaymentMethod("BANK_TRANSFER")} className="mt-1 h-4 w-4 accent-rose-400" />
+              <label className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 text-sm font-semibold transition-all ${paymentMethod === "CARD" ? "border-rose-300 bg-rose-500/10 shadow-lg shadow-rose-950/30" : "border-white/10 bg-[#180f22] text-white hover:border-white/20 hover:bg-[#1d1526]"}`}>
+                <input type="radio" name="paymentMethod" checked={paymentMethod === "CARD"} onChange={() => setPaymentMethod("CARD")} className="mt-1 h-4 w-4 accent-rose-400" />
                 <span>
-                  <span className="block text-base font-black text-white">Bank transfer</span>
-                  <span className="mt-1 block text-xs uppercase tracking-[0.18em] text-rose-200/80">Ecobank / Access / UBA</span>
+                  <span className="block text-base font-black text-white">Credit or debit card</span>
+                  <span className="mt-1 block text-xs uppercase tracking-[0.18em] text-rose-200/80">Processed by PayPal; card option where available</span>
                 </span>
               </label>
               <label className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 text-sm font-semibold transition-all ${paymentMethod === "MOBILE_MONEY" ? "border-rose-300 bg-rose-500/10 shadow-lg shadow-rose-950/30" : "border-white/10 bg-[#180f22] text-white hover:border-white/20 hover:bg-[#1d1526]"}`}>
@@ -171,29 +166,16 @@ export default function MembershipPage() {
                   <span className="mt-1 block text-xs uppercase tracking-[0.18em] text-rose-200/80">Orange Money / MTN / Lonestar</span>
                 </span>
               </label>
+              <label className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 text-sm font-semibold transition-all ${paymentMethod === "PAYPAL" ? "border-rose-300 bg-rose-500/10 shadow-lg shadow-rose-950/30" : "border-white/10 bg-[#180f22] text-white hover:border-white/20 hover:bg-[#1d1526]"}`}>
+                <input type="radio" name="paymentMethod" checked={paymentMethod === "PAYPAL"} onChange={() => setPaymentMethod("PAYPAL")} className="mt-1 h-4 w-4 accent-rose-400" />
+                <span>
+                  <span className="block text-base font-black text-white">PayPal</span>
+                  <span className="mt-1 block text-xs uppercase tracking-[0.18em] text-rose-200/80">Pay securely with PayPal</span>
+                </span>
+              </label>
             </div>
 
-            {paymentMethod === "BANK_TRANSFER" ? (
-              <div className="mt-6 grid gap-4 md:grid-cols-2">
-                <label className="text-sm font-semibold text-white/80 md:col-span-2">
-                  Select a bank account
-                  <select value={bankName} onChange={(event) => setBankName(event.target.value)} className="mt-2 w-full rounded-xl border border-rose-300/40 bg-[#120d19] px-4 py-3 text-white outline-none transition focus:border-rose-300 focus:ring-2 focus:ring-rose-400/30" required>
-                    <option value="">Choose a bank account</option>
-                    {bankOptions.map((option) => (
-                      <option key={option} value={option}>{option}</option>
-                    ))}
-                  </select>
-                </label>
-                <label className="text-sm font-semibold text-white/80">
-                  Account name
-                  <input value={bankAccountName} onChange={(event) => setBankAccountName(event.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-[#120d19] px-4 py-3 text-white outline-none placeholder:text-white/40 focus:border-rose-300" placeholder="John Doe" required />
-                </label>
-                <label className="text-sm font-semibold text-white/80">
-                  Account number
-                  <input value={bankAccountNumber} onChange={(event) => setBankAccountNumber(event.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-[#120d19] px-4 py-3 text-white outline-none placeholder:text-white/40 focus:border-rose-300" placeholder="0123456789" required />
-                </label>
-              </div>
-            ) : (
+            {paymentMethod === "MOBILE_MONEY" ? (
               <div className="mt-6 grid gap-4 md:grid-cols-2">
                 <label className="text-sm font-semibold text-white/80 md:col-span-2">
                   Select mobile money provider
@@ -212,9 +194,10 @@ export default function MembershipPage() {
                   <input value={mobileNumber} onChange={(event) => setMobileNumber(event.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-[#120d19] px-4 py-3 text-white outline-none placeholder:text-white/40 focus:border-rose-300" placeholder="+231 88 123 4567" required />
                 </label>
               </div>
-            )}
+            ) : null}
 
-            <div className="mt-6 rounded-2xl border border-rose-300/40 bg-linear-to-br from-[#1f1328] via-[#180f22] to-[#120d19] p-5 text-sm text-white/80 shadow-xl shadow-rose-950/20">
+            {paymentMethod === "MOBILE_MONEY" && (
+              <div className="mt-6 rounded-2xl border border-rose-300/40 bg-linear-to-br from-[#1f1328] via-[#180f22] to-[#120d19] p-5 text-sm text-white/80 shadow-xl shadow-rose-950/20">
               <p className="font-black uppercase tracking-[0.22em] text-rose-300">Love Liberia receiving account</p>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <p className="rounded-xl border border-white/10 bg-white/5 px-3 py-2"><span className="block text-[10px] uppercase tracking-[0.2em] text-white/50">Account name</span><span className="mt-1 block font-semibold text-white">{receivingAccount.accountName || "Not configured yet"}</span></p>
@@ -224,17 +207,18 @@ export default function MembershipPage() {
                 <p className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 sm:col-span-2"><span className="block text-[10px] uppercase tracking-[0.2em] text-white/50">Currency</span><span className="mt-1 block font-semibold text-white">{receivingAccount.currency || "USD"}</span></p>
               </div>
             </div>
+            )}
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
               <button type="button" onClick={() => setSelectedPlan(null)} className="rounded-xl border border-white/10 px-5 py-3 font-semibold text-white/80 hover:bg-white/5">Cancel</button>
               <button type="submit" disabled={loadingPlan !== ""} className="rounded-xl bg-rose-300 px-5 py-3 font-bold text-rose-950 hover:bg-rose-200 disabled:opacity-60">
-                {loadingPlan === selectedPlan ? "Submitting..." : "Submit payment details"}
+                {loadingPlan === selectedPlan ? "Submitting..." : paymentMethod === "PAYPAL" ? "Continue to PayPal" : paymentMethod === "CARD" ? "Continue to secure card checkout" : "Submit payment details"}
               </button>
             </div>
           </form>
         )}
 
-        <div className="mt-12 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-5 text-sm text-white/60"><Zap className="h-5 w-5 shrink-0 text-amber-300" />Payments can be completed by bank transfer or mobile money, and the app will request the required details before confirmation.</div>
+        <div className="mt-12 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-5 text-sm text-white/60"><Zap className="h-5 w-5 shrink-0 text-amber-300" />Pay by card through PayPal when card checkout is available, or use your PayPal account. Membership is confirmed after PayPal captures payment.</div>
       </section>
     </main>
   );

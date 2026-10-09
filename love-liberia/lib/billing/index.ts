@@ -1,11 +1,13 @@
 import { MockBillingAdapter } from "./adapters/mock";
 import { StripeBillingAdapter } from "./adapters/stripe";
+import { PayPalBillingAdapter } from "./adapters/paypal";
 import type { BillingAdapter } from "./types";
-import { getPaymentProvider } from "@/lib/payments/account";
+import { getPaymentProvider, type PaymentProvider } from "@/lib/payments/account";
 
-const adapters: Record<string, () => BillingAdapter> = {
+const adapters: Partial<Record<PaymentProvider, () => BillingAdapter>> = {
   mock: () => new MockBillingAdapter(),
   stripe: () => new StripeBillingAdapter(),
+  paypal: () => new PayPalBillingAdapter(),
 };
 
 /**
@@ -15,12 +17,14 @@ const adapters: Record<string, () => BillingAdapter> = {
  * production so a misconfigured deployment fails loudly instead of handing out
  * free credits and memberships.
  */
-export function getBillingAdapter(): BillingAdapter {
-  const provider = getPaymentProvider();
+export function getBillingAdapter(selectedProvider?: PaymentProvider): BillingAdapter {
+  const provider = selectedProvider || getPaymentProvider();
 
   if (provider === "mock" && process.env.NODE_ENV === "production") {
     throw new Error("Mock billing is disabled in production. Set PAYMENT_PROVIDER to a live provider.");
   }
 
-  return (adapters[provider] || adapters.mock)();
+  const createAdapter = adapters[provider];
+  if (!createAdapter) throw new Error(`Billing adapter for ${provider} is not implemented.`);
+  return createAdapter();
 }

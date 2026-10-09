@@ -28,7 +28,7 @@ import { MEMBERSHIP_PRICES } from "@/lib/billing/plans";
 const STRIPE_API = "https://api.stripe.com/v1";
 
 async function stripeRequest(path: string, params: Record<string, string>) {
-  const secret = getSecretKey();
+  const secret = getSecretKey("stripe");
   if (!secret) throw new Error("PAYMENT_STRIPE_SECRET_KEY is not set.");
 
   const response = await fetch(`${STRIPE_API}${path}`, {
@@ -52,9 +52,9 @@ async function stripeRequest(path: string, params: Record<string, string>) {
 
 export class StripeBillingAdapter implements BillingAdapter {
   private assertConfigured() {
-    if (!isLivePaymentConfigured()) {
+    if (!isLivePaymentConfigured("stripe")) {
       throw new Error(
-        "Live payments are not configured. Set PAYMENT_PROVIDER=stripe and PAYMENT_STRIPE_SECRET_KEY.",
+        "Live card payments are not configured. Set PAYMENT_STRIPE_SECRET_KEY.",
       );
     }
   }

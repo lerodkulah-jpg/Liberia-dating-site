@@ -7,7 +7,7 @@
  *
  * Set these in love-liberia/.env (see .env.payment.example):
  *
- *   PAYMENT_PROVIDER        stripe | flutterwave | paystack | mock
+ *   PAYMENT_PROVIDER        stripe | flutterwave | paystack | paypal | mock
  *   PAYMENT_ACCOUNT_NAME    Your registered business name
  *   PAYMENT_ACCOUNT_EMAIL   Email on the provider account
  *   PAYMENT_ACCOUNT_ID      Provider account / merchant ID
@@ -18,7 +18,7 @@
  *   PAYMENT_<PROVIDER>_WEBHOOK_SECRET
  */
 
-export type PaymentProvider = "stripe" | "flutterwave" | "paystack" | "mock";
+export type PaymentProvider = "stripe" | "flutterwave" | "paystack" | "paypal" | "mock";
 
 export type PayoutAccount = {
   provider: PaymentProvider;
@@ -35,55 +35,61 @@ function readEnv(name: string): string {
 
 export function getPaymentProvider(): PaymentProvider {
   const value = readEnv("PAYMENT_PROVIDER").toLowerCase();
-  if (value === "stripe" || value === "flutterwave" || value === "paystack")
+  if (value === "stripe" || value === "flutterwave" || value === "paystack" || value === "paypal")
     return value;
   return "mock";
 }
 
-export function isLivePaymentConfigured(): boolean {
-  return getPaymentProvider() !== "mock" && Boolean(getSecretKey());
+export function isLivePaymentConfigured(provider = getPaymentProvider()): boolean {
+  return provider !== "mock" && Boolean(getSecretKey(provider));
 }
 
 /** Returns the name of the env var holding the secret key for the active provider. */
-export function getSecretKeyVar(): string {
-  switch (getPaymentProvider()) {
+export function getSecretKeyVar(provider = getPaymentProvider()): string {
+  switch (provider) {
     case "stripe":
       return "PAYMENT_STRIPE_SECRET_KEY";
     case "flutterwave":
       return "PAYMENT_FLUTTERWAVE_SECRET_KEY";
     case "paystack":
       return "PAYMENT_PAYSTACK_SECRET_KEY";
+    case "paypal":
+      return "PAYMENT_PAYPAL_CLIENT_SECRET";
     default:
       return "";
   }
 }
 
-export function getPublicKeyVar(): string {
-  switch (getPaymentProvider()) {
+export function getPublicKeyVar(provider = getPaymentProvider()): string {
+  switch (provider) {
     case "stripe":
       return "PAYMENT_STRIPE_PUBLIC_KEY";
     case "flutterwave":
       return "PAYMENT_FLUTTERWAVE_PUBLIC_KEY";
     case "paystack":
       return "PAYMENT_PAYSTACK_PUBLIC_KEY";
+    case "paypal":
+      return "PAYMENT_PAYPAL_CLIENT_ID";
     default:
       return "";
   }
 }
 
-export function getSecretKey(): string {
-  const variable = getSecretKeyVar();
+export function getSecretKey(provider = getPaymentProvider()): string {
+  const variable = getSecretKeyVar(provider);
   return variable ? readEnv(variable) : "";
 }
 
-export function getWebhookSecret(): string {
-  switch (getPaymentProvider()) {
+export function getWebhookSecret(provider = getPaymentProvider()): string {
+  switch (provider) {
     case "stripe":
       return readEnv("PAYMENT_STRIPE_WEBHOOK_SECRET");
     case "flutterwave":
       return readEnv("PAYMENT_FLUTTERWAVE_WEBHOOK_SECRET");
     case "paystack":
       return readEnv("PAYMENT_PAYSTACK_WEBHOOK_SECRET");
+    case "paypal":
+      return "";
     default:
       return readEnv("PAYMENT_MOCK_WEBHOOK_SECRET");
   }

@@ -3,9 +3,9 @@ import { prisma } from "@/lib/prisma";
 /**
  * The ONLY place where paid value (credits, membership) is granted.
  *
- * It is called exclusively from the signature-verified webhook route
- * (app/api/payments/webhook/route.ts) — never from a user-facing request. That is
- * what stops a member from granting themselves credits or a free upgrade.
+ * It is called only after a payment provider confirms settlement, either through
+ * a verified webhook or a server-to-server PayPal capture — never from an
+ * unverified user-facing request.
  *
  * Every function here is idempotent: payment providers retry webhooks, and a
  * double-granted credit balance is real money lost.
@@ -49,19 +49,24 @@ export async function fulfillCreditPurchase(params: {
 
   const credits = transaction.credits;
 
-  await prisma.$transaction([
-    prisma.creditWallet.upsert({
+  const granted = await prisma.$transaction(async (tx) => {
+    const claimed = await tx.creditTransaction.updateMany({
+      where: { id: transaction.id, status: "PENDING" },
+      data: { status: "COMPLETED" },
+    });
+    if (claimed.count === 0) return false;
+
+    await tx.creditWallet.upsert({
       where: { userId: transaction.userId },
       update: { balance: { increment: credits } },
       create: { userId: transaction.userId, balance: credits },
-    }),
-    // Conditional update: only flips PENDING -> COMPLETED once, so two concurrent
-    // webhook deliveries cannot both apply the increment above.
-    prisma.creditTransaction.updateMany({
-      where: { id: transaction.id, status: "PENDING" },
-      data: { status: "COMPLETED" },
-    }),
-  ]);
+    });
+    return true;
+  });
+  if (!granted) {
+    const latest = await prisma.creditTransaction.findUnique({ where: { id: transaction.id } });
+    return latest?.status === "COMPLETED" ? { status: "already_fulfilled" } : { status: "not_found" };
+  }
 
   return { status: "fulfilled", creditsGranted: credits };
 }
