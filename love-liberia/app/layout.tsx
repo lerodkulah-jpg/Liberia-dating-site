@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description:
     "Love Liberia is a modern dating platform connecting Liberians in Liberia and around the world.",
   manifest: "/manifest.webmanifest",
-  icons: { icon: "/icon.svg", apple: "/icon.svg" },
+  icons: { icon: "/love-liberia-mark.png", apple: "/love-liberia-mark.png" },
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
   alternates: { canonical: "/" },
   openGraph: {
@@ -17,9 +17,9 @@ export const metadata: Metadata = {
     description: "Meet genuine people in Liberia and around the world through a safer, relationship-focused community.",
     url: "/",
     siteName: "Love Liberia",
-    images: [{ url: "/icon.svg", width: 512, height: 512, alt: "Love Liberia" }],
+    images: [{ url: "/love-liberia-logo.png", width: 768, height: 768, alt: "Love Liberia logo" }],
   },
-  twitter: { card: "summary", title: "Love Liberia | Connect, Love & Belong", description: "Meet genuine people in Liberia and around the world.", images: ["/icon.svg"] },
+  twitter: { card: "summary_large_image", title: "Love Liberia | Connect, Love & Belong", description: "Meet genuine people in Liberia and around the world.", images: ["/love-liberia-logo.png"] },
 };
 
 export const viewport: Viewport = {
@@ -53,7 +53,7 @@ export default function RootLayout({
             `,
           }}
         />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "Organization", name: "Love Liberia", url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000", logo: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/icon.svg`, sameAs: ["https://www.facebook.com/loveliberia", "https://www.instagram.com/loveliberia", "https://www.tiktok.com/@loveliberia", "https://x.com/loveliberia", "https://www.youtube.com/@loveliberia"] }) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "Organization", name: "Love Liberia", url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000", logo: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/love-liberia-logo.png`, sameAs: ["https://www.facebook.com/loveliberia", "https://www.instagram.com/loveliberia", "https://www.tiktok.com/@loveliberia", "https://x.com/loveliberia", "https://www.youtube.com/@loveliberia"] }) }} />
         <AppNavigation />
         <PwaRegistration />
         {children}

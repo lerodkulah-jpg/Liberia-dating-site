@@ -261,7 +261,7 @@ button {
   content: "";
   position: absolute;
   inset: 2% 6% 12% 6%;
-  background-image: url("/icon.svg");
+  background-image: url("/love-liberia-mark.png");
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
@@ -348,12 +348,12 @@ button {
 
 .hero-title-art {
   inset: -10% -8% -18% -12%;
-  background-image: url("/icon.svg");
+  background-image: url("/love-liberia-mark.png");
 }
 
 .real-connections-art {
   inset: -6% -10% -8% -10%;
-  background-image: url("/icon.svg");
+  background-image: url("/love-liberia-mark.png");
 }
 
 .couple-scene {

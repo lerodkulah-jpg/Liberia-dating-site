@@ -1,6 +1,6 @@
-const CACHE_NAME = "love-liberia-shell-v2";
+const CACHE_NAME = "love-liberia-shell-v3";
 const OFFLINE_URL = "/offline.html";
-const SHELL = ["/offline.html", "/icon.svg", "/manifest.webmanifest"];
+const SHELL = ["/offline.html", "/love-liberia-mark.png", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -49,8 +49,8 @@ self.addEventListener("push", (event) => {
   try { if (event.data) data = { ...data, ...event.data.json() }; } catch { /* Keep the default notification. */ }
   event.waitUntil(self.registration.showNotification(data.title, {
     body: data.body,
-    icon: "/icon.svg",
-    badge: "/icon.svg",
+    icon: "/love-liberia-mark.png",
+    badge: "/love-liberia-mark.png",
     data: { url: data.url },
   }));
 });

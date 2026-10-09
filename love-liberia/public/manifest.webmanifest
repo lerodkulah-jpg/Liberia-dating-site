@@ -10,6 +10,6 @@
   "theme_color": "#e11d48",
   "categories": ["social", "lifestyle"],
   "icons": [
-    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "/love-liberia-mark.png", "sizes": "365x365", "type": "image/png", "purpose": "any" }
   ]
 }

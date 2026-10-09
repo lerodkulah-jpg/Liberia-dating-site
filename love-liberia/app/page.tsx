@@ -41,7 +41,7 @@ export default function Home() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
           {/* Logo */}
           <a href="#home" className="flex min-h-11 items-center gap-3">
-            <img src="/icon.svg" alt="Love Liberia logo" className="h-11 w-11 rounded-full object-cover ring-2 ring-red-600/70 ring-offset-2 ring-offset-white dark:ring-offset-gray-950" />
+            <img src="/love-liberia-mark.png" alt="Love Liberia logo" className="h-11 w-11 rounded-full object-cover ring-2 ring-red-600/70 ring-offset-2 ring-offset-white dark:ring-offset-gray-950" />
 
             <div>
               <h1 className="text-xl font-black tracking-tight">
@@ -416,7 +416,7 @@ export default function Home() {
           <div className="grid grid-cols-3 gap-x-2 gap-y-6 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
             <div className="col-span-3 md:col-span-1">
               <div className="flex items-center gap-3">
-                <img src="/icon.svg" alt="Love Liberia logo" className="h-10 w-10 rounded-full object-cover ring-2 ring-red-500/70 ring-offset-2 ring-offset-gray-50 dark:ring-offset-gray-950" />
+                <img src="/love-liberia-mark.png" alt="Love Liberia logo" className="h-10 w-10 rounded-full object-cover ring-2 ring-red-500/70 ring-offset-2 ring-offset-gray-50 dark:ring-offset-gray-950" />
 
                 <span className="text-xl font-black">
                   Love<span className="text-red-600">Liberia</span>
@@ -478,7 +478,7 @@ export default function Home() {
             </div>
 
             <div className="flex items-center gap-2 font-semibold text-gray-700 dark:text-gray-300">
-              <img src="/icon.svg" alt="Love Liberia logo" className="h-7 w-7 rounded-full object-cover ring-2 ring-red-500/70 ring-offset-2 ring-offset-gray-50 dark:ring-offset-gray-950" />
+              <img src="/love-liberia-mark.png" alt="Love Liberia logo" className="h-7 w-7 rounded-full object-cover ring-2 ring-red-500/70 ring-offset-2 ring-offset-gray-50 dark:ring-offset-gray-950" />
               <span>Made for meaningful connections ❤️</span>
             </div>
           </div>

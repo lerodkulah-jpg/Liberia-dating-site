@@ -76,7 +76,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="mb-8 text-center text-white">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full ring-2 ring-red-400/70 ring-offset-2 ring-offset-gray-950">
-            <img src="/icon.svg" alt="Love Liberia logo" className="h-14 w-14 rounded-full object-cover" />
+            <img src="/love-liberia-mark.png" alt="Love Liberia logo" className="h-14 w-14 rounded-full object-cover" />
           </div>
           <h1 className="mt-5 text-2xl font-black text-black sm:text-3xl">Welcome back</h1>
           <p className="mt-2 text-sm font-medium text-black sm:text-base">Sign in to your Love Liberia account and keep connecting.</p>
