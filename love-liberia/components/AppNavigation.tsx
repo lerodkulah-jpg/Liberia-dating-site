@@ -18,7 +18,7 @@ import {
 import ThemeToggle from "@/components/ThemeToggle";
 
 const mobileItems = [
-  { href: "/dashboard", label: "Home", icon: Home },
+  { href: "/", label: "Home", icon: Home },
   { href: "/discover", label: "Discover", icon: Compass },
   { href: "/matches", label: "Matches", icon: Heart },
   { href: "/messages", label: "Messages", icon: MessageCircle },
@@ -26,7 +26,7 @@ const mobileItems = [
 ];
 
 const desktopItems = [
-  { href: "/dashboard", label: "Home", icon: Home },
+  { href: "/", label: "Home", icon: Home },
   { href: "/discover", label: "Discover", icon: Compass },
   { href: "/matches", label: "Matches", icon: Heart },
   { href: "/messages", label: "Messages", icon: MessageCircle },
@@ -60,7 +60,7 @@ export default function AppNavigation() {
     <>
       <header className="sticky top-0 z-40 hidden border-b border-gray-200 bg-white/95 backdrop-blur-lg dark:border-white/10 dark:bg-gray-950/95 lg:block">
         <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 xl:gap-7 xl:px-6">
-          <Link href="/dashboard" className="mr-1 flex shrink-0 items-center gap-2 text-lg font-black text-rose-700 dark:text-rose-400" aria-label="Love Liberia home">
+          <Link href="/" className="mr-1 flex shrink-0 items-center gap-2 text-lg font-black text-rose-700 dark:text-rose-400" aria-label="Love Liberia home">
             <img src="/love-liberia-mark.png" alt="Love Liberia logo" className="h-9 w-9 rounded-full object-cover ring-2 ring-rose-400/60 ring-offset-2 ring-offset-white dark:ring-offset-gray-950" />
             <span>Love Liberia</span>
           </Link>
