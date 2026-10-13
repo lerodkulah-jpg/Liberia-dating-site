@@ -26,6 +26,7 @@ type ProfileForm = {
   childrenPreference: string;
   hideOnlineStatus: boolean;
   hideLastActive: boolean;
+  profileVisibility: "PUBLIC" | "PRIVATE";
   messagePermission: "EVERYONE" | "MATCHES";
   incognitoMode: boolean;
   profileViewTracking: boolean;
@@ -64,6 +65,7 @@ const emptyForm: ProfileForm = {
   childrenPreference: "",
   hideOnlineStatus: false,
   hideLastActive: false,
+  profileVisibility: "PUBLIC",
   messagePermission: "EVERYONE",
   incognitoMode: false,
   profileViewTracking: true,
@@ -83,6 +85,8 @@ export default function EditProfilePage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [verification, setVerification] = useState<VerificationState | null>(null);
+  const [savedProfileVisibility, setSavedProfileVisibility] = useState<ProfileForm["profileVisibility"]>("PUBLIC");
+  const [featuredStatus, setFeaturedStatus] = useState("NONE");
   const [verificationType, setVerificationType] = useState<"EMAIL" | "PHONE">("EMAIL");
   const [verificationCode, setVerificationCode] = useState("");
   const [verificationMessage, setVerificationMessage] = useState("");
@@ -130,6 +134,7 @@ export default function EditProfilePage() {
           childrenPreference: user.childrenPreference || "",
           hideOnlineStatus: Boolean(user.hideOnlineStatus),
           hideLastActive: Boolean(user.hideLastActive),
+          profileVisibility: user.profileVisibility === "PRIVATE" ? "PRIVATE" : "PUBLIC",
           messagePermission: user.messagePermission === "MATCHES" ? "MATCHES" : "EVERYONE",
           incognitoMode: Boolean(user.incognitoMode),
           profileViewTracking: user.profileViewTracking !== false,
@@ -138,6 +143,8 @@ export default function EditProfilePage() {
           maxAge: preferences?.maxAge || 60,
           profileImage: user.profileImage || "",
         });
+        setSavedProfileVisibility(user.profileVisibility === "PRIVATE" ? "PRIVATE" : "PUBLIC");
+        setFeaturedStatus(user.featuredStatus || "NONE");
       } catch (loadError) {
         if (active) {
           setError(loadError instanceof Error ? loadError.message : "Unable to load your profile.");
@@ -233,12 +240,37 @@ export default function EditProfilePage() {
         return;
       }
 
+      setSavedProfileVisibility(form.profileVisibility);
+      if (form.profileVisibility === "PRIVATE") setFeaturedStatus("NONE");
       setMessage("Profile updated successfully!");
       window.setTimeout(() => router.push("/profile"), 800);
     } catch {
       setError("Something went wrong.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function updateFeaturedRequest() {
+    const action = featuredStatus === "PENDING" || featuredStatus === "APPROVED" ? "withdraw" : "request";
+    setMessage("");
+    setError("");
+
+    try {
+      const response = await fetch("/api/featured-profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.error || "Unable to update your feature request.");
+        return;
+      }
+      setFeaturedStatus(data.user.featuredStatus);
+      setMessage(action === "request" ? "Feature request sent for admin review." : "Your featured listing request was withdrawn.");
+    } catch {
+      setError("Unable to update your feature request.");
     }
   }
 
@@ -428,7 +460,7 @@ export default function EditProfilePage() {
               <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {galleryPhotos.map((photo) => (
                   <div key={photo.id} className="relative aspect-square overflow-hidden rounded-xl">
-                    <Image src={photo.url} alt="Additional profile" fill sizes="(max-width: 640px) 50vw, 25vw" className="object-cover" />
+                    <Image src={photo.url} alt="Additional profile" fill sizes="(max-width: 640px) 50vw, 25vw" unoptimized className="object-cover" />
                     <div className="absolute inset-x-2 bottom-2 flex gap-2">
                       {form.profileImage === photo.url ? (
                         <span className="rounded-md bg-emerald-600/90 px-2 py-1 text-xs font-bold text-white">Main photo</span>
@@ -494,12 +526,25 @@ export default function EditProfilePage() {
           <fieldset className="border-t border-gray-800 pt-6">
             <legend className="text-xl font-bold">Privacy controls</legend>
             <div className="mt-4 space-y-3">
+              <label className="block rounded-xl border border-gray-800 p-4 text-sm font-semibold">Profile visibility<select value={form.profileVisibility} onChange={(event) => updateField("profileVisibility", event.target.value as ProfileForm["profileVisibility"])} className="mt-2 min-h-12 w-full rounded-xl border border-gray-700 bg-gray-950 px-4 py-3 font-normal outline-none focus:border-rose-500"><option value="PUBLIC">Public to Love Liberia members</option><option value="PRIVATE">Private — only visible to you</option></select><span className="mt-2 block font-normal text-gray-400">{form.profileVisibility === "PUBLIC" ? "Signed-in members can find your profile. Your profile appears on the public homepage only if you request featuring and an admin approves it." : "Your profile details are hidden from discovery, profile search, match lists, and the public homepage. Existing conversations remain in the app."}</span></label>
               <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-gray-800 p-4"><input type="checkbox" checked={form.hideOnlineStatus} onChange={(event) => updateField("hideOnlineStatus", event.target.checked)} className="mt-1 h-5 w-5 accent-rose-500" /><span><span className="block font-semibold">Hide online status</span><span className="text-sm text-gray-400">Other members will not see when you are online.</span></span></label>
               <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-gray-800 p-4"><input type="checkbox" checked={form.hideLastActive} onChange={(event) => updateField("hideLastActive", event.target.checked)} className="mt-1 h-5 w-5 accent-rose-500" /><span><span className="block font-semibold">Hide last active</span><span className="text-sm text-gray-400">Hide your recent activity time from other members.</span></span></label>
               <label className="block rounded-xl border border-gray-800 p-4 text-sm font-semibold">Who can message you<select value={form.messagePermission} onChange={(event) => updateField("messagePermission", event.target.value as ProfileForm["messagePermission"])} className="mt-2 min-h-12 w-full rounded-xl border border-gray-700 bg-gray-950 px-4 py-3 font-normal outline-none focus:border-rose-500"><option value="EVERYONE">Everyone</option><option value="MATCHES">Matches only</option></select></label>
               <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-gray-800 p-4"><input type="checkbox" checked={form.incognitoMode} onChange={(event) => updateField("incognitoMode", event.target.checked)} className="mt-1 h-5 w-5 accent-rose-500" /><span><span className="block font-semibold">Incognito mode</span><span className="text-sm text-gray-400">Hide your profile from discovery until you choose to interact.</span></span></label>
               <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-gray-800 p-4"><input type="checkbox" checked={form.profileViewTracking} onChange={(event) => updateField("profileViewTracking", event.target.checked)} className="mt-1 h-5 w-5 accent-rose-500" /><span><span className="block font-semibold">Show profile visitors</span><span className="text-sm text-gray-400">Allow your visits to appear in other members&apos; visitor lists.</span></span></label>
               <p className="rounded-xl bg-gray-950 p-4 text-sm text-gray-400">To hide your profile from a specific person, use Block from their profile or conversation.</p>
+              <div className="rounded-xl border border-rose-900/60 bg-rose-950/20 p-4">
+                <h3 className="font-semibold">Request a homepage feature</h3>
+                <p className="mt-1 text-sm text-gray-400">Featured profiles are visible to all homepage visitors. Your listing requires your public visibility setting and admin approval.</p>
+                {featuredStatus === "APPROVED" && <p className="mt-3 text-sm font-semibold text-emerald-300">Approved and eligible to appear while your profile is public.</p>}
+                {featuredStatus === "PENDING" && <p className="mt-3 text-sm font-semibold text-amber-300">Your request is waiting for admin review.</p>}
+                {featuredStatus === "REJECTED" && <p className="mt-3 text-sm font-semibold text-gray-300">Your last request was not approved. You may submit another request.</p>}
+                {form.profileVisibility === "PRIVATE" && <p className="mt-3 text-sm text-gray-300">Set your profile to public and save before requesting a feature.</p>}
+                {form.profileVisibility === "PUBLIC" && savedProfileVisibility !== "PUBLIC" && <p className="mt-3 text-sm text-gray-300">Save your public visibility setting before requesting a feature.</p>}
+                <button type="button" onClick={() => void updateFeaturedRequest()} disabled={form.profileVisibility !== "PUBLIC" || savedProfileVisibility !== "PUBLIC" || saving} className="mt-3 min-h-11 rounded-lg bg-rose-500 px-4 py-2 font-semibold text-white hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-50">
+                  {featuredStatus === "PENDING" || featuredStatus === "APPROVED" ? "Withdraw feature request" : "Request homepage feature"}
+                </button>
+              </div>
             </div>
           </fieldset>
 

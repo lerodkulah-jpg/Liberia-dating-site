@@ -12,9 +12,22 @@ import {
   Users,
   X,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
+
+type FeaturedProfile = {
+  id: string;
+  firstName: string;
+  age: number;
+  county: string | null;
+  city: string | null;
+  occupation: string | null;
+  bio: string | null;
+  profileImage: string | null;
+  photoVerified: boolean;
+};
 
 const footerInfo = {
   "Discover People": "Set your location, age range, interests, and relationship goals to find compatible Liberians in Liberia and the diaspora.",
@@ -33,6 +46,28 @@ const footerInfo = {
 export default function Home() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [activeInfo, setActiveInfo] = useState<keyof typeof footerInfo | null>(null);
+  const [featuredProfiles, setFeaturedProfiles] = useState<FeaturedProfile[]>([]);
+  const [featuredProfilesError, setFeaturedProfilesError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadFeaturedProfiles() {
+      try {
+        const response = await fetch("/api/featured-profiles", { cache: "no-store" });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Unable to load featured profiles.");
+        if (active) setFeaturedProfiles(data.profiles || []);
+      } catch {
+        if (active) setFeaturedProfilesError("Featured profiles are temporarily unavailable.");
+      }
+    }
+
+    void loadFeaturedProfiles();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <main className="min-h-screen bg-white text-gray-900 dark:bg-gray-950 dark:text-white">
@@ -386,6 +421,38 @@ export default function Home() {
         </div>
       </section>
 
+      {featuredProfiles.length > 0 && (
+        <section className="mx-auto max-w-7xl px-5 py-12 lg:px-8" aria-labelledby="featured-profiles-title">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="font-bold uppercase tracking-widest text-red-600">Member spotlight</p>
+            <h2 id="featured-profiles-title" className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">Featured Love Liberia members</h2>
+            <p className="mt-3 text-gray-600 dark:text-gray-400">These members chose to be featured and were approved by our team.</p>
+          </div>
+          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {featuredProfiles.map((profile) => (
+              <Link key={profile.id} href="/register" className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:border-gray-800 dark:bg-gray-900">
+                {profile.profileImage ? (
+                  <Image src={profile.profileImage} alt={`${profile.firstName}'s featured profile`} width={400} height={256} unoptimized className="h-64 w-full object-cover" />
+                ) : (
+                  <div className="flex h-64 items-center justify-center bg-red-50 text-5xl font-black text-red-600 dark:bg-red-950/40">{profile.firstName.charAt(0).toUpperCase()}</div>
+                )}
+                <div className="p-4">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-bold">{profile.firstName}, {profile.age}</h3>
+                    {profile.photoVerified && <Check size={17} className="text-blue-500" aria-label="Photo verified" />}
+                  </div>
+                  <p className="mt-1 text-sm text-gray-500">{[profile.city, profile.county].filter(Boolean).join(", ") || "Liberia"}</p>
+                  {profile.occupation && <p className="mt-2 text-sm font-semibold text-gray-700 dark:text-gray-300">{profile.occupation}</p>}
+                  {profile.bio && <p className="mt-2 line-clamp-3 text-sm text-gray-600 dark:text-gray-400">{profile.bio}</p>}
+                  <span className="mt-4 inline-flex font-bold text-red-600">Join to connect <ArrowRight size={17} className="ml-1" /></span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+      {featuredProfilesError && <p role="status" className="mx-auto max-w-7xl px-5 py-4 text-center text-sm text-gray-500">{featuredProfilesError}</p>}
+
       {/* CTA */}
       <section className="px-5 pb-1 sm:pb-1.5 lg:px-8">
         <div className="mx-auto max-w-4xl overflow-hidden rounded-4xl bg-linear-to-br from-red-600 to-red-800 px-4 py-6 text-center text-white shadow-2xl sm:px-8 sm:py-10">
@@ -426,15 +493,6 @@ export default function Home() {
               <p className="mt-5 max-w-sm text-sm leading-6 text-gray-500">
                 Connecting hearts across Liberia and beyond.
               </p>
-              <div className="mt-6 flex flex-wrap gap-2" aria-label="Love Liberia social media">
-                {[
-                  ["Facebook", "https://www.facebook.com/share/19TorK29Ee/"],
-                  ["Instagram", "https://www.instagram.com/loveliberia"],
-                  ["TikTok", "https://www.tiktok.com/@trickyfin?is_from_webapp=1&sender_device=pcto"],
-                  ["X", "https://x.com/loveliberia"],
-                  ["YouTube", "https://www.youtube.com/@loveliberia"],
-                ].map(([label, href]) => <a key={label} href={href} target={label === "TikTok" ? "_self" : "_blank"} rel={label === "TikTok" ? undefined : "noreferrer"} className="rounded-full border border-gray-300 px-3 py-2 text-xs font-bold text-gray-600 transition hover:border-red-500 hover:text-red-600 dark:border-gray-700 dark:text-gray-300">{label}</a>)}
-              </div>
             </div>
 
             <FooterColumn

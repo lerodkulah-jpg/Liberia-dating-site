@@ -58,7 +58,7 @@ export async function GET(request: Request) {
       prisma.like.findUnique({
         where: { senderId_receiverId: { senderId: otherUserId, receiverId: userId } },
       }),
-      prisma.user.findUnique({ where: { id: otherUserId }, select: { messagePermission: true } }),
+      prisma.user.findUnique({ where: { id: otherUserId }, select: { messagePermission: true, profileVisibility: true } }),
     ]);
 
     if (!recipient || (recipient.messagePermission === "MATCHES" && (!sentLike || !receivedLike))) {
@@ -68,7 +68,22 @@ export async function GET(request: Request) {
       );
     }
 
-    const [messages, user] = await Promise.all([
+    if (recipient.profileVisibility === "PRIVATE") {
+      const existingConversation = await prisma.message.findFirst({
+        where: {
+          OR: [
+            { senderId: userId, receiverId: otherUserId },
+            { senderId: otherUserId, receiverId: userId },
+          ],
+        },
+        select: { id: true },
+      });
+      if (!existingConversation) {
+        return NextResponse.json({ error: "Profile not found." }, { status: 404 });
+      }
+    }
+
+    const [messages, user, viewer] = await Promise.all([
       prisma.message.findMany({
         where: {
           OR: [
@@ -102,7 +117,12 @@ export async function GET(request: Request) {
             take: 1,
           },
           isOnline: true,
+          profileVisibility: true,
         },
+      }),
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: { username: true, screenshotDeterrence: true },
       }),
     ]);
 
@@ -118,8 +138,20 @@ export async function GET(request: Request) {
       ...message,
       hasImage: Boolean(imageMimeType),
     }));
+    const conversationUser = user?.profileVisibility === "PRIVATE"
+      ? { ...user, firstName: "Private member", username: "", profileImage: null, profilePhotos: [], isOnline: false }
+      : user;
 
-    return NextResponse.json({ currentUserId: userId, user, messages: clientMessages, hasMore }, { headers: { "Cache-Control": "private, no-store" } });
+    return NextResponse.json({
+      currentUserId: userId,
+      user: conversationUser,
+      messages: clientMessages,
+      hasMore,
+      screenshotDeterrence: {
+        enabled: viewer?.screenshotDeterrence ?? false,
+        watermark: viewer?.username ? `@${viewer.username}` : "Love Liberia member",
+      },
+    }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
     console.error("Get messages error:", error);
     return NextResponse.json({ error: "Unable to load messages." }, { status: 500 });
@@ -198,7 +230,7 @@ export async function POST(request: Request) {
       prisma.like.findUnique({
         where: { senderId_receiverId: { senderId: receiverId, receiverId: userId } },
       }),
-      prisma.user.findUnique({ where: { id: receiverId }, select: { messagePermission: true } }),
+      prisma.user.findUnique({ where: { id: receiverId }, select: { messagePermission: true, profileVisibility: true } }),
     ]);
 
     if (!recipient || (recipient.messagePermission === "MATCHES" && (!sentLike || !receivedLike))) {
@@ -206,6 +238,21 @@ export async function POST(request: Request) {
         { error: "You can only message your matches." },
         { status: 403 }
       );
+    }
+
+    if (recipient.profileVisibility === "PRIVATE") {
+      const existingConversation = await prisma.message.findFirst({
+        where: {
+          OR: [
+            { senderId: userId, receiverId },
+            { senderId: receiverId, receiverId: userId },
+          ],
+        },
+        select: { id: true },
+      });
+      if (!existingConversation) {
+        return NextResponse.json({ error: "Profile not found." }, { status: 404 });
+      }
     }
 
     let messageContent = trimmedContent;

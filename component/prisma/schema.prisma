@@ -54,6 +54,12 @@ model User {
 	messagePermission String @default("EVERYONE")
 	incognitoMode Boolean @default(false)
 	profileViewTracking Boolean @default(true)
+	screenshotDeterrence Boolean @default(false)
+	profileVisibility String @default("PUBLIC")
+	featuredStatus String @default("NONE")
+	featuredRequestedAt DateTime?
+	featuredReviewedAt DateTime?
+	featuredReviewedById String?
 	failedLoginCount Int @default(0)
 	lockedUntil DateTime?
 	lastLoginAt DateTime?
@@ -119,6 +125,8 @@ model User {
 	sessions Session[]
 	favoritesMade Favorite[] @relation("FavoritesMade")
 	favoritedBy Favorite[] @relation("FavoritedBy")
+
+	@@index([profileVisibility, featuredStatus])
 }
 
 model DatingPreference {

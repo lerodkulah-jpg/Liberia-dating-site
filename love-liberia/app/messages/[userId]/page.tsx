@@ -56,6 +56,8 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [currentUserId, setCurrentUserId] = useState("");
+  const [screenshotDeterrence, setScreenshotDeterrence] = useState<{ enabled: boolean; watermark: string }>({ enabled: false, watermark: "" });
+  const [pageInactive, setPageInactive] = useState(false);
   const displayProfileImage = user?.profileImage || user?.profilePhotos?.[0]?.url || null;
   const [content, setContent] = useState("");
   const [photo, setPhoto] = useState<File | null>(null);
@@ -70,6 +72,30 @@ export default function ChatPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages]);
+
+  useEffect(() => {
+    function hideWhenInactive() {
+      if (screenshotDeterrence.enabled) setPageInactive(true);
+    }
+
+    function updateVisibility() {
+      setPageInactive(screenshotDeterrence.enabled && document.hidden);
+    }
+
+    function revealWhenActive() {
+      if (!document.hidden) updateVisibility();
+    }
+
+    document.addEventListener("visibilitychange", updateVisibility);
+    window.addEventListener("blur", hideWhenInactive);
+    window.addEventListener("focus", revealWhenActive);
+
+    return () => {
+      document.removeEventListener("visibilitychange", updateVisibility);
+      window.removeEventListener("blur", hideWhenInactive);
+      window.removeEventListener("focus", revealWhenActive);
+    };
+  }, [screenshotDeterrence.enabled]);
 
   useEffect(() => {
     let disposed = false;
@@ -90,6 +116,7 @@ export default function ChatPage() {
 
         if (disposed) return;
         setCurrentUserId(data.currentUserId || "");
+        setScreenshotDeterrence(data.screenshotDeterrence || { enabled: false, watermark: "" });
         setUser(data.user || null);
         setError("");
         setMessages((current) => {
@@ -207,7 +234,8 @@ export default function ChatPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col bg-gray-950 text-white">
+    <main className="relative flex min-h-screen flex-col bg-gray-950 text-white">
+      <div className={screenshotDeterrence.enabled && pageInactive ? "flex min-h-screen flex-col blur-xl select-none" : "flex min-h-screen flex-col"}>
       <nav className="border-b border-gray-800 bg-gray-900">
         <div className="mx-auto flex w-full max-w-4xl items-center gap-3 px-3 py-3 sm:gap-4 sm:px-6 sm:py-4">
           <Link
@@ -242,7 +270,12 @@ export default function ChatPage() {
       </nav>
 
       <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-3 sm:px-4">
-        <div className="flex-1 space-y-4 overflow-y-auto py-6">
+        <div
+          className="flex-1 space-y-4 overflow-y-auto py-6"
+          onContextMenu={screenshotDeterrence.enabled ? (event) => event.preventDefault() : undefined}
+          onDragStart={screenshotDeterrence.enabled ? (event) => event.preventDefault() : undefined}
+        >
+          {screenshotDeterrence.enabled && <p className="rounded-lg border border-rose-900/60 bg-rose-950/40 p-3 text-center text-xs text-rose-200">Screenshot deterrence is on. Visible watermarks discourage sharing but cannot block screenshots.</p>}
           {error && <div className="rounded-xl bg-red-950/60 p-4 text-center text-sm text-red-200">{error}</div>}
           {messages.length === 0 && !error && (
             <div className="py-20 text-center">
@@ -255,7 +288,7 @@ export default function ChatPage() {
             const isMine = message.senderId === currentUserId;
             return (
               <div key={message.id} className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[85%] rounded-2xl px-4 py-3 sm:max-w-[75%] ${isMine ? "rounded-br-md bg-rose-500 text-white" : "rounded-bl-md bg-gray-900 text-gray-100 shadow-sm"}`}>
+                <div className={`relative max-w-[85%] overflow-hidden rounded-2xl px-4 py-3 sm:max-w-[75%] ${isMine ? "rounded-br-md bg-rose-500 text-white" : "rounded-bl-md bg-gray-900 text-gray-100 shadow-sm"}`}>
                   {message.hasImage && (
                     <Image
                       src={`/api/messages/${encodeURIComponent(message.id)}/image`}
@@ -270,6 +303,11 @@ export default function ChatPage() {
                   <p className={`mt-1 text-[10px] ${isMine ? "text-rose-100" : "text-gray-500"}`}>
                     {new Date(message.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                   </p>
+                  {screenshotDeterrence.enabled && (
+                    <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-10 grid grid-cols-2 place-items-center gap-4 overflow-hidden text-[10px] font-bold text-white/30">
+                      {Array.from({ length: 6 }, (_, index) => <span key={index} className="-rotate-12 whitespace-nowrap">{screenshotDeterrence.watermark}</span>)}
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -317,6 +355,12 @@ export default function ChatPage() {
           </div>
         </form>
       </section>
+      </div>
+      {screenshotDeterrence.enabled && pageInactive && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/90 p-6 text-center" role="status">
+          <p className="max-w-sm font-semibold text-white">Conversation hidden while this page is inactive. Return to the app to view it.</p>
+        </div>
+      )}
     </main>
   );
 }

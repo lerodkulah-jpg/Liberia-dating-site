@@ -10,7 +10,7 @@ export async function GET() {
     if (!userId) return NextResponse.json({ error: "You must be logged in." }, { status: 401 });
 
     const sentLikes = await prisma.like.findMany({
-      where: { senderId: userId },
+      where: { senderId: userId, receiver: { is: { profileVisibility: "PUBLIC" } } },
       include: { receiver: { select: { id: true, firstName: true, username: true, dateOfBirth: true, county: true, city: true, profileImage: true, photoVerified: true, isOnline: true } } },
     });
     const receivedLikes = await prisma.like.findMany({ where: { receiverId: userId }, select: { senderId: true } });

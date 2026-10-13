@@ -1,11 +1,11 @@
-import fs from "node:fs/promises";
-import path from "node:path";
+import { randomUUID } from "node:crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyAuthToken } from "@/lib/auth";
 import { hasImageSignature, rateLimit, sameOrigin, writeSecurityAudit } from "@/lib/security/request";
 import { invalidatePhotoVerification } from "@/lib/profile-verification";
+import { deleteProfilePhotoObject, ProfilePhotoStorageConfigurationError, uploadProfilePhotoObject } from "@/lib/profile-photo-storage";
 
 const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 const maxPhotos = 10;
@@ -17,7 +17,8 @@ async function getCurrentUserId() {
 }
 
 export async function POST(request: Request) {
-  const createdFilePaths: string[] = [];
+  const uploadedPhotoKeys: string[] = [];
+  let ownerId: string | null = null;
 
   try {
     if (!sameOrigin(request)) return NextResponse.json({ error: "Invalid request origin." }, { status: 403 });
@@ -25,6 +26,7 @@ export async function POST(request: Request) {
     if (!limit.allowed) return NextResponse.json({ error: "Too many photo changes. Try again later." }, { status: 429, headers: { "Retry-After": String(limit.retryAfter) } });
     const userId = await getCurrentUserId();
     if (!userId) return NextResponse.json({ error: "You must be logged in." }, { status: 401 });
+    ownerId = userId;
 
     const count = await prisma.profilePhoto.count({ where: { userId } });
     const files = (await request.formData())
@@ -42,6 +44,7 @@ export async function POST(request: Request) {
       );
     }
 
+    const validatedFiles: { file: File; bytes: Uint8Array }[] = [];
     for (const file of files) {
       if (!allowedTypes.has(file.type)) {
         return NextResponse.json({ error: "Only JPG, PNG and WEBP images are allowed." }, { status: 400 });
@@ -51,19 +54,15 @@ export async function POST(request: Request) {
       }
       const bytes = new Uint8Array(await file.arrayBuffer());
       if (!hasImageSignature(bytes, file.type)) return NextResponse.json({ error: "One of the uploaded files is not a valid image." }, { status: 400 });
+      validatedFiles.push({ file, bytes });
     }
 
-    const uploadDirectory = path.join(process.cwd(), "public", "uploads", "profiles");
-    await fs.mkdir(uploadDirectory, { recursive: true });
-
-    const uploadedPhotos: { url: string; filePath: string }[] = [];
-    for (const [index, file] of files.entries()) {
-      const extension = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
-      const filename = `${userId}-${Date.now()}-${index}.${extension}`;
-      const filePath = path.join(uploadDirectory, filename);
-      await fs.writeFile(filePath, Buffer.from(await file.arrayBuffer()));
-      createdFilePaths.push(filePath);
-      uploadedPhotos.push({ url: `/uploads/profiles/${filename}`, filePath });
+    const uploadedPhotos: { url: string }[] = [];
+    for (const { file, bytes } of validatedFiles) {
+      const photoKey = randomUUID();
+      await uploadProfilePhotoObject(userId, photoKey, bytes, file.type);
+      uploadedPhotoKeys.push(photoKey);
+      uploadedPhotos.push({ url: `/api/profile-photos/${photoKey}` });
     }
 
     const photos = await prisma.$transaction(async (transaction) => {
@@ -82,8 +81,19 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ photos }, { status: 201 });
   } catch (error) {
-    await Promise.all(createdFilePaths.map((filePath) => fs.unlink(filePath).catch(() => undefined)));
+    if (ownerId) {
+      const cleanupOwnerId = ownerId;
+      const cleanupResults = await Promise.allSettled(
+        uploadedPhotoKeys.map((photoKey) => deleteProfilePhotoObject(cleanupOwnerId, `/api/profile-photos/${photoKey}`)),
+      );
+      for (const result of cleanupResults) {
+        if (result.status === "rejected") console.error("Gallery photo upload cleanup error:", result.reason);
+      }
+    }
     console.error("Gallery photo upload error:", error);
+    if (error instanceof ProfilePhotoStorageConfigurationError) {
+      return NextResponse.json({ error: "Profile photo storage is not configured." }, { status: 503 });
+    }
     return NextResponse.json({ error: "Unable to upload photo." }, { status: 500 });
   }
 }
@@ -109,8 +119,7 @@ export async function DELETE(request: Request) {
       if (user?.profileImage === photo.url) await transaction.user.update({ where: { id: userId }, data: { profileImage: null } });
       await invalidatePhotoVerification(transaction, userId);
     });
-    const filePath = path.join(process.cwd(), "public", photo.url.replace(/^\//, ""));
-    await fs.unlink(filePath).catch(() => undefined);
+    await deleteProfilePhotoObject(userId, photo.url);
 
     return NextResponse.json({ success: true });
   } catch (error) {

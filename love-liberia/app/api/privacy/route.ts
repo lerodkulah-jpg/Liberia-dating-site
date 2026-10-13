@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { verifyAuthToken } from "@/lib/auth";
 import { hasActivePaidMembership } from "@/lib/billing/plans";
 
-const privacyFields = ["hideOnlineStatus", "hideLastActive", "incognitoMode", "profileViewTracking"] as const;
+const privacyFields = ["hideOnlineStatus", "hideLastActive", "incognitoMode", "profileViewTracking", "screenshotDeterrence"] as const;
 
 async function getUserId() {
   const token = (await cookies()).get("love_liberia_token")?.value;
@@ -17,7 +17,7 @@ export async function GET() {
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { hideOnlineStatus: true, hideLastActive: true, messagePermission: true, incognitoMode: true, profileViewTracking: true },
+    select: { hideOnlineStatus: true, hideLastActive: true, messagePermission: true, incognitoMode: true, profileViewTracking: true, screenshotDeterrence: true },
   });
   return user ? NextResponse.json({ privacy: user }) : NextResponse.json({ error: "User not found." }, { status: 404 });
 }
@@ -35,6 +35,6 @@ export async function PATCH(request: Request) {
   if (body.messagePermission === "EVERYONE" || body.messagePermission === "MATCHES") data.messagePermission = body.messagePermission;
   if (Object.keys(data).length === 0) return NextResponse.json({ error: "No privacy changes supplied." }, { status: 400 });
 
-  const user = await prisma.user.update({ where: { id: userId }, data, select: { hideOnlineStatus: true, hideLastActive: true, messagePermission: true, incognitoMode: true, profileViewTracking: true } });
+  const user = await prisma.user.update({ where: { id: userId }, data, select: { hideOnlineStatus: true, hideLastActive: true, messagePermission: true, incognitoMode: true, profileViewTracking: true, screenshotDeterrence: true } });
   return NextResponse.json({ privacy: user });
 }

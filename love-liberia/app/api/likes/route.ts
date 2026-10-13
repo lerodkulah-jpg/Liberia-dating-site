@@ -20,10 +20,10 @@ export async function POST(request: Request) {
     if (senderId === receiverId) return NextResponse.json({ error: "You cannot like yourself." }, { status: 400 });
 
     const [receiver, sender] = await Promise.all([
-      prisma.user.findUnique({ where: { id: receiverId }, select: { id: true, firstName: true, profileImage: true } }),
+      prisma.user.findUnique({ where: { id: receiverId }, select: { id: true, firstName: true, profileImage: true, profileVisibility: true } }),
       prisma.user.findUnique({ where: { id: senderId }, select: { id: true, firstName: true, profileImage: true, membershipPlan: true, membershipStatus: true } }),
     ]);
-    if (!receiver) return NextResponse.json({ error: "User not found." }, { status: 404 });
+    if (!receiver || receiver.profileVisibility !== "PUBLIC") return NextResponse.json({ error: "User not found." }, { status: 404 });
 
     const existingLike = await prisma.like.findUnique({ where: { senderId_receiverId: { senderId, receiverId } } });
     if (existingLike) return NextResponse.json({ message: "Already liked.", matched: false });

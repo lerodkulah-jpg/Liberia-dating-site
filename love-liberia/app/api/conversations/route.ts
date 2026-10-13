@@ -56,6 +56,7 @@ export async function GET() {
           },
           isOnline: true,
           hideOnlineStatus: true,
+          profileVisibility: true,
         },
       }),
       prisma.message.groupBy({
@@ -83,12 +84,16 @@ export async function GET() {
       ([otherUserId, message]) => {
         const user = usersById.get(otherUserId);
         if (!user) return null;
+        const privateProfile = user.profileVisibility === "PRIVATE";
 
         return {
           user: {
-            ...user,
-            isOnline: user.hideOnlineStatus ? false : user.isOnline,
-            hideOnlineStatus: undefined,
+            id: user.id,
+            firstName: privateProfile ? "Private member" : user.firstName,
+            username: privateProfile ? "" : user.username,
+            profileImage: privateProfile ? null : user.profileImage,
+            profilePhotos: privateProfile ? [] : user.profilePhotos,
+            isOnline: privateProfile ? false : user.hideOnlineStatus ? false : user.isOnline,
           },
           lastMessage: {
             id: message.id,

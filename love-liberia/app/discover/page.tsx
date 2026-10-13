@@ -69,6 +69,7 @@ export default function DiscoverPage() {
   // Filters
   const [county, setCounty] = useState("");
   const [city, setCity] = useState("");
+  const [occupation, setOccupation] = useState("");
   const [relationshipGoal, setRelationshipGoal] =
     useState("");
   const [online, setOnline] = useState(false);
@@ -103,6 +104,10 @@ export default function DiscoverPage() {
 
       if (city) {
         params.set("city", city);
+      }
+
+      if (occupation.trim()) {
+        params.set("occupation", occupation.trim());
       }
 
       if (relationshipGoal) {
@@ -154,7 +159,7 @@ export default function DiscoverPage() {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [activeSection, city, county, online, relationshipGoal, sort, verified]);
+  }, [activeSection, city, county, occupation, online, relationshipGoal, sort, verified]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -182,6 +187,7 @@ export default function DiscoverPage() {
   function clearFilters() {
     setCounty("");
     setCity("");
+    setOccupation("");
     setRelationshipGoal("");
     setOnline(false);
     setVerified(false);
@@ -268,7 +274,7 @@ export default function DiscoverPage() {
   return (
     <main className="min-h-screen bg-gray-50">
       {toast && <button type="button" onClick={() => setToast("")} className="motion-toast fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-full bg-gray-950 px-4 py-3 text-sm font-bold text-white shadow-xl lg:bottom-6">{toast}</button>}
-      {matchCelebration && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4"><div className="motion-modal w-full max-w-md rounded-3xl bg-white p-7 text-center shadow-2xl"><p className="animate-pulse text-5xl">❤️</p><h2 className="mt-3 text-3xl font-black text-gray-900">It&apos;s a Match!</h2><p className="mt-2 text-gray-600">You both liked each other.</p><div className="mt-6 flex items-center justify-center gap-3"><div className="relative h-24 w-24 overflow-hidden rounded-full bg-pink-100">{matchCelebration.currentUser.profileImage && <Image src={matchCelebration.currentUser.profileImage} alt={matchCelebration.currentUser.firstName} fill sizes="96px" className="object-cover" />}</div><span className="text-2xl">❤️</span><div className="relative h-24 w-24 overflow-hidden rounded-full bg-pink-100">{matchCelebration.otherUser.profileImage && <Image src={matchCelebration.otherUser.profileImage} alt={matchCelebration.otherUser.firstName} fill sizes="96px" className="object-cover" />}</div></div><div className="mt-7 grid gap-3 sm:grid-cols-2"><Link href={`/messages/${matchCelebration.otherUser.id}`} className="rounded-xl bg-pink-600 px-5 py-3 font-bold text-white transition hover:-translate-y-0.5 hover:bg-pink-700">Start Chat</Link><button type="button" onClick={() => setMatchCelebration(null)} className="rounded-xl border border-gray-300 px-5 py-3 font-bold text-gray-700 transition hover:bg-gray-50">Keep Discovering</button></div></div></div>}
+      {matchCelebration && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4"><div className="motion-modal w-full max-w-md rounded-3xl bg-white p-7 text-center shadow-2xl"><p className="animate-pulse text-5xl">❤️</p><h2 className="mt-3 text-3xl font-black text-gray-900">It&apos;s a Match!</h2><p className="mt-2 text-gray-600">You both liked each other.</p><div className="mt-6 flex items-center justify-center gap-3"><div className="relative h-24 w-24 overflow-hidden rounded-full bg-pink-100">{matchCelebration.currentUser.profileImage && <Image src={matchCelebration.currentUser.profileImage} alt={matchCelebration.currentUser.firstName} fill sizes="96px" unoptimized className="object-cover" />}</div><span className="text-2xl">❤️</span><div className="relative h-24 w-24 overflow-hidden rounded-full bg-pink-100">{matchCelebration.otherUser.profileImage && <Image src={matchCelebration.otherUser.profileImage} alt={matchCelebration.otherUser.firstName} fill sizes="96px" unoptimized className="object-cover" />}</div></div><div className="mt-7 grid gap-3 sm:grid-cols-2"><Link href={`/messages/${matchCelebration.otherUser.id}`} className="rounded-xl bg-pink-600 px-5 py-3 font-bold text-white transition hover:-translate-y-0.5 hover:bg-pink-700">Start Chat</Link><button type="button" onClick={() => setMatchCelebration(null)} className="rounded-xl border border-gray-300 px-5 py-3 font-bold text-gray-700 transition hover:bg-gray-50">Keep Discovering</button></div></div></div>}
       {/* Header */}
       <header className="sticky top-0 z-20 border-b bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
@@ -386,6 +392,21 @@ export default function DiscoverPage() {
                     setCity(e.target.value)
                   }
                   placeholder="Enter city"
+                  className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-pink-500"
+                />
+              </div>
+
+              {/* Occupation */}
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Occupation
+                </label>
+                <input
+                  type="search"
+                  value={occupation}
+                  onChange={(event) => setOccupation(event.target.value)}
+                  placeholder="e.g. Teacher"
+                  maxLength={80}
                   className="w-full rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-pink-500"
                 />
               </div>

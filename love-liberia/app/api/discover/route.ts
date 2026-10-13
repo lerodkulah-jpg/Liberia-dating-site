@@ -49,6 +49,7 @@ export async function GET(request: Request) {
     const searchParams = new URL(request.url).searchParams;
     const county = searchParams.get("county");
     const city = searchParams.get("city");
+    const occupation = searchParams.get("occupation")?.trim().slice(0, 80) || "";
     const relationshipGoal = searchParams.get("relationshipGoal");
     const online = searchParams.get("online") === "true";
     const verified = searchParams.get("verified") === "true";
@@ -60,9 +61,12 @@ export async function GET(request: Request) {
       where: {
         id: { not: userId },
         isActive: true,
+        isBanned: false,
+        profileVisibility: "PUBLIC",
         incognitoMode: hasPaidAccess,
         ...(county ? { county } : {}),
         ...(city ? { city: { contains: city } } : {}),
+        ...(occupation ? { occupation: { contains: occupation, mode: "insensitive" } } : {}),
         ...(relationshipGoal ? { relationshipGoal } : {}),
         ...(online ? { isOnline: true } : {}),
         ...(verified ? { photoVerified: true } : {}),

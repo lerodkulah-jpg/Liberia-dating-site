@@ -47,6 +47,7 @@ export async function GET(
         firstName: true,
         username: true,
         gender: true,
+        profileVisibility: true,
         country: true,
         county: true,
         city: true,
@@ -75,6 +76,7 @@ export async function GET(
     ]);
 
     if (!currentUser || !user) return NextResponse.json({ error: "Profile not found." }, { status: 404 });
+    if (user.profileVisibility !== "PUBLIC") return NextResponse.json({ error: "Profile not found." }, { status: 404 });
 
     if (user.profileViewTracking) {
       const recentView = await prisma.profileView.findFirst({

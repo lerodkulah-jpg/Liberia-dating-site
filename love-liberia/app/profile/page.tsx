@@ -118,7 +118,7 @@ export default async function ProfilePage() {
                 <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
                   {profilePhotos.map((photo) => (
                     <div key={photo.id} className="relative aspect-square overflow-hidden rounded-xl">
-                      <Image src={photo.url} alt={`${user.firstName}'s gallery photo`} fill sizes="(max-width: 640px) 50vw, 33vw" className="object-cover transition duration-300 hover:scale-105" />
+                      <Image src={photo.url} alt={`${user.firstName}'s gallery photo`} fill sizes="(max-width: 640px) 50vw, 33vw" unoptimized className="object-cover transition duration-300 hover:scale-105" />
                     </div>
                   ))}
                 </div>

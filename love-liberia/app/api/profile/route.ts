@@ -66,6 +66,7 @@ export async function PUT(request: Request) {
       messagePermission,
       incognitoMode,
       profileViewTracking,
+      profileVisibility,
       interestedIn,
       minAge,
       maxAge,
@@ -75,6 +76,9 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "First name is required." }, { status: 400 });
     }
     if (!validateText(firstName, 80)) return NextResponse.json({ error: "First name is too long." }, { status: 400 });
+    if (profileVisibility !== undefined && profileVisibility !== "PUBLIC" && profileVisibility !== "PRIVATE") {
+      return NextResponse.json({ error: "Please choose a valid profile visibility setting." }, { status: 400 });
+    }
 
     const minimumAge = Number(minAge);
     const maximumAge = Number(maxAge);
@@ -109,6 +113,13 @@ export async function PUT(request: Request) {
         messagePermission: messagePermission === "MATCHES" ? "MATCHES" : "EVERYONE",
         incognitoMode: incognitoMode === true,
         profileViewTracking: profileViewTracking !== false,
+        ...(profileVisibility ? { profileVisibility } : {}),
+        ...(profileVisibility === "PRIVATE" ? {
+          featuredStatus: "NONE",
+          featuredRequestedAt: null,
+          featuredReviewedAt: null,
+          featuredReviewedById: null,
+        } : {}),
       },
       include: { preferences: true },
     });

@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
   messagePermission: "EVERYONE" | "MATCHES";
   incognitoMode: boolean;
   profileViewTracking: boolean;
+  screenshotDeterrence: boolean;
 };
 
 type Person = { id: string; firstName: string; username: string; profileImage: string | null };
@@ -155,6 +156,7 @@ export default function PrivacySettingsPage() {
           {toggle("hideLastActive", "Hide last active", "Do not show your recent activity time.")}
           {toggle("incognitoMode", "Incognito mode", "Stay out of recommendations until you choose to interact.")}
           {toggle("profileViewTracking", "Show profile visitors", "Allow your profile visits to appear in visitor lists.")}
+          {toggle("screenshotDeterrence", "Screenshot deterrence", "Show a visible account watermark on chats and shared photos, and blur them when you leave the page. This discourages casual sharing but cannot prevent screenshots or camera photos.")}
           <label className="block rounded-xl border border-gray-200 bg-white p-4 font-semibold dark:border-slate-800 dark:bg-slate-950">Who can message you<select value={privacy.messagePermission} onChange={(event) => void savePrivacy("messagePermission", event.target.value)} className="mt-2 min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 font-normal dark:border-slate-700 dark:bg-slate-900"><option value="EVERYONE">Everyone</option><option value="MATCHES">Matches only</option></select></label>
         </section>
 

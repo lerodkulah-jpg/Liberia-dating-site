@@ -11,18 +11,24 @@ function hashToken(token: string) {
 }
 
 async function sendResetEmail(email: string, resetUrl: string) {
-  const apiKey = process.env.RESEND_API_KEY;
+  const apiKey = process.env.BREVO_API_KEY;
   const from = process.env.PASSWORD_RESET_FROM_EMAIL;
   if (!apiKey || !from) return false;
 
-  const response = await fetch("https://api.resend.com/emails", {
+  const senderMatch = from.match(/^(.*?)\s*<([^<>]+)>$/);
+  const sender = senderMatch
+    ? { name: senderMatch[1].trim() || "Love Liberia", email: senderMatch[2].trim() }
+    : { name: "Love Liberia", email: from.trim() };
+
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    headers: { "api-key": apiKey, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from,
-      to: [email],
+      sender,
+      to: [{ email }],
       subject: "Reset your Love Liberia password",
-      html: `<p>We received a request to reset your Love Liberia password.</p><p><a href="${resetUrl}">Reset your password</a></p><p>This link expires in 30 minutes. If you did not request this, you can ignore this email.</p>`,
+      htmlContent: `<p>We received a request to reset your Love Liberia password.</p><p><a href="${resetUrl}">Reset your password</a></p><p>This link expires in 30 minutes. If you did not request this, you can ignore this email.</p>`,
+      textContent: `We received a request to reset your Love Liberia password. Reset your password: ${resetUrl}\n\nThis link expires in 30 minutes. If you did not request this, you can ignore this email.`,
     }),
   });
 

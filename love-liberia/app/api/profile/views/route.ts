@@ -23,7 +23,7 @@ export async function GET() {
 
   const views = await prisma.profileView.findMany({ where: { viewedUserId: userId }, orderBy: { createdAt: "desc" }, take: 100 });
   const viewerIds = [...new Set(views.map((view) => view.viewerId))];
-  const viewers = await prisma.user.findMany({ where: { id: { in: viewerIds }, isActive: true }, select: { id: true, firstName: true, dateOfBirth: true, country: true, county: true, profileImage: true } });
+  const viewers = await prisma.user.findMany({ where: { id: { in: viewerIds }, isActive: true, profileVisibility: "PUBLIC" }, select: { id: true, firstName: true, dateOfBirth: true, country: true, county: true, profileImage: true } });
   const byId = new Map(viewers.map((viewer) => [viewer.id, viewer]));
   return NextResponse.json({ visitors: views.flatMap((view) => { const viewer = byId.get(view.viewerId); return viewer ? [{ id: viewer.id, firstName: viewer.firstName, age: ageFrom(viewer.dateOfBirth), location: [viewer.county, viewer.country].filter(Boolean).join(", ") || "Liberia", profileImage: viewer.profileImage, viewedAt: view.createdAt }] : []; }) });
 }

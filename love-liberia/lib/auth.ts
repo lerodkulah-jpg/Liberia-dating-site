@@ -72,8 +72,11 @@ export async function verifyAuthToken(token: string): Promise<string | null> {
       return null;
     }
 
-    const session = await prisma.session.findFirst({ where: { tokenVersion: payload.sid, userId: payload.sub, revokedAt: null, expiresAt: { gt: new Date() } }, select: { id: true } });
-    if (!session) return null;
+    const session = await prisma.session.findFirst({
+      where: { tokenVersion: payload.sid, userId: payload.sub, revokedAt: null, expiresAt: { gt: new Date() } },
+      select: { id: true, user: { select: { isActive: true, isBanned: true } } },
+    });
+    if (!session || !session.user.isActive || session.user.isBanned) return null;
     await prisma.session.update({ where: { id: session.id }, data: { lastActiveAt: new Date() } });
     return payload.sub;
   } catch {

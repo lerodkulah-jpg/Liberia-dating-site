@@ -65,7 +65,7 @@ export default async function DashboardPage() {
         <p className="text-gray-300">Welcome back,</p>
         <div className="mt-4 flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-rose-950 text-3xl font-bold text-rose-300">
           {displayProfileImage ? (
-            <Image src={displayProfileImage} alt={`${user.firstName}'s profile`} width={96} height={96} className="h-full w-full object-cover" />
+            <Image src={displayProfileImage} alt={`${user.firstName}'s profile`} width={96} height={96} unoptimized className="h-full w-full object-cover" />
           ) : (
             user.firstName.charAt(0).toUpperCase()
           )}

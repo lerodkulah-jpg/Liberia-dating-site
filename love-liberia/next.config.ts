@@ -16,6 +16,15 @@ const nextConfig: NextConfig = {
     imageSizes: [64, 96, 128, 256, 384, 512, 768],
     remotePatterns: [{ protocol: "https", hostname: "images.unsplash.com" }],
   },
+  async redirects() {
+    return [
+      {
+        source: "/uploads/profiles/:photoKey",
+        destination: "/api/profile-photos/:photoKey",
+        permanent: false,
+      },
+    ];
+  },
   async headers() {
     return [{
       source: "/(.*)",

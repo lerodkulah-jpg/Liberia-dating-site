@@ -188,6 +188,12 @@ export default async function AdminDashboardPage() {
             </h2>
           </div>
           <div className="flex flex-wrap items-center gap-3">
+            {can(admin.role, "manage_content") && <Link
+              href="/admin/featured-profiles"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-fuchsia-300 bg-fuchsia-50 px-4 py-3 text-sm font-bold text-fuchsia-800 hover:bg-fuchsia-100"
+            >
+              Review featured profiles
+            </Link>}
             {can(admin.role, "verify_profiles") && <Link
               href="/admin/verifications"
               className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-800 hover:bg-emerald-100"

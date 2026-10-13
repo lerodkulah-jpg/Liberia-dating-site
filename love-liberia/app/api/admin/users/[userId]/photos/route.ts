@@ -1,10 +1,9 @@
-import fs from "node:fs/promises";
-import path from "node:path";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyAuthToken } from "@/lib/auth";
 import { invalidatePhotoVerification } from "@/lib/profile-verification";
+import { deleteProfilePhotoObject } from "@/lib/profile-photo-storage";
 
 async function isAdmin() {
   const token = (await cookies()).get("love_liberia_token")?.value;
@@ -59,11 +58,7 @@ export async function DELETE(
         await invalidatePhotoVerification(transaction, userId);
       });
 
-      if (user.profileImage) {
-        await fs
-          .unlink(path.join(process.cwd(), "public", user.profileImage.replace(/^\//, "")))
-          .catch(() => undefined);
-      }
+      if (user.profileImage) await deleteProfilePhotoObject(userId, user.profileImage);
 
       return NextResponse.json({ success: true });
     }
@@ -80,9 +75,7 @@ export async function DELETE(
       await transaction.profilePhoto.delete({ where: { id: photo.id } });
       await invalidatePhotoVerification(transaction, userId);
     });
-    await fs
-      .unlink(path.join(process.cwd(), "public", photo.url.replace(/^\//, "")))
-      .catch(() => undefined);
+    await deleteProfilePhotoObject(userId, photo.url);
 
     return NextResponse.json({ success: true });
   } catch (error) {

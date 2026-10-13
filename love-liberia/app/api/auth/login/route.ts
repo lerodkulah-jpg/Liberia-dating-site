@@ -31,11 +31,11 @@ export async function POST(request: Request) {
 
     if (user?.lockedUntil && user.lockedUntil > new Date()) {
       await prisma.loginAttempt.create({ data: { email, success: false, ipAddress: context.ipAddress, userAgent: context.userAgent } });
-      return NextResponse.json({ success: false, message: "This account is temporarily locked. Try again later." }, { status: 423 });
+      return NextResponse.json({ success: false, message: "Invalid email or password." }, { status: 401 });
     }
 
     const validPassword = user ? await comparePassword(password, user.password) : false;
-    if (!user || !validPassword || !user.isActive) {
+    if (!user || !validPassword || !user.isActive || user.isBanned) {
       await prisma.loginAttempt.create({ data: { email, success: false, ipAddress: context.ipAddress, userAgent: context.userAgent } });
       if (user) {
         const failedLoginCount = user.failedLoginCount + 1;

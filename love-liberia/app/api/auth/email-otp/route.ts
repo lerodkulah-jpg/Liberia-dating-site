@@ -59,10 +59,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Email sign-in is not configured." }, { status: 503 });
     }
 
-    const user = await prisma.user.findUnique({ where: { email }, select: { id: true, email: true, isActive: true, lockedUntil: true } });
+    const user = await prisma.user.findUnique({ where: { email }, select: { id: true, email: true, isActive: true, isBanned: true, lockedUntil: true } });
 
     if (action === "request") {
-      if (!user?.isActive || (user.lockedUntil && user.lockedUntil > new Date())) {
+      if (!user?.isActive || user.isBanned || (user.lockedUntil && user.lockedUntil > new Date())) {
         return NextResponse.json({ success: true, message: genericMessage });
       }
 
@@ -91,7 +91,7 @@ export async function POST(request: Request) {
       });
     }
 
-    if (!user?.isActive || (user.lockedUntil && user.lockedUntil > new Date())) {
+    if (!user?.isActive || user.isBanned || (user.lockedUntil && user.lockedUntil > new Date())) {
       return NextResponse.json({ error: "That code is invalid or expired." }, { status: 400 });
     }
 
@@ -115,7 +115,7 @@ export async function POST(request: Request) {
       if (consumed.count !== 1) return false;
 
       const activeUser = await transaction.user.findFirst({
-        where: { id: user.id, isActive: true, OR: [{ lockedUntil: null }, { lockedUntil: { lte: now } }] },
+        where: { id: user.id, isActive: true, isBanned: false, OR: [{ lockedUntil: null }, { lockedUntil: { lte: now } }] },
         select: { id: true },
       });
       if (!activeUser) return false;
